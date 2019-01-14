@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.uc.CostappDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+    <insert id="save_costapp"  useGeneratedKeys="true" keyProperty="costapp_id" parameterType="com.casd.entity.uc.Costapp">
+   		
+   		INSERT INTO uc_costapp  (costapp_id,costapp_company,costapp_appitem,costapp_amount,
+   		costapp_application,costapp_majoyview,costapp_managerview,costapp_chairmanview,costapp_financeview) 
+        VALUES (#{costapp_id},#{costapp_company},#{costapp_appitem},#{costapp_amount},
+        #{costapp_application},#{costapp_majoyview},#{costapp_managerview},#{costapp_chairmanview},#{costapp_financeview})
+   		on duplicate key update costapp_id=#{costapp_id},costapp_company=#{costapp_company},
+	    						costapp_appitem=#{costapp_appitem},costapp_amount=#{costapp_amount},
+	    						costapp_application=#{costapp_application},costapp_majoyview=#{costapp_majoyview},
+	    						costapp_managerview=#{costapp_managerview},costapp_chairmanview=#{costapp_chairmanview},
+	    						costapp_financeview=#{costapp_financeview}
+   </insert>
+   
+   <select id="getData" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+   <delete id="delete_data" parameterType="map">
+       DELETE FROM   ${where}
+    </delete> 
+   
+</mapper>

@@ -1,0 +1,255 @@
+* {
+	font-size: 12px;
+	font-family: Tahoma, Verdana, 微软雅黑, 新宋体
+}
+
+body {
+	background: #D2E0F2;
+}
+
+a {
+	color: Black;
+	text-decoration: none;
+}
+
+a:hover {
+	color: Red;
+	text-decoration: underline;
+}
+
+.left {
+	text-align: left;
+}
+
+.right {
+	text-align: right;
+}
+
+.center {
+	text-align: center;
+}
+
+.textbox03 {
+	border: #878787 1px solid;
+	padding: 4px 3px;
+	font: Verdana, Geneva, sans-serif, 宋体;
+	line-height: 14px;
+	background-color: #fff;
+	height: auto;
+	font-size: 14px;
+	font-weight: bold;
+	width: 190px;
+}
+
+.txt01 {
+	font: Verdana, Geneva, sans-serif, 宋体;
+	padding: 3px 2px 2px 2px;
+	color: #000;
+	border: solid 1px #ddd;
+}
+
+.txt {
+	border: #878787 1px solid;
+	padding: 4px 3px;
+	font: Verdana, Geneva, sans-serif, 宋体;
+	line-height: 14px;
+	background-color: #fff;
+	height: auto;
+	font-size: 14px;
+}
+
+.footer {
+	text-align: center;
+	color: #15428B;
+	margin: 0px;
+	padding: 0px;
+	line-height: 23px;
+	font-weight: bold;
+}
+
+.head a {
+	color: White;
+	text-decoration: underline;
+}
+
+.easyui-accordion ul {
+	list-style-type: none;
+	margin: 0px;
+	padding: 10px;
+}
+
+.easyui-accordion ul li {
+	padding: 0px;
+}
+
+.easyui-accordion ul li a {
+	line-height: 24px;
+}
+
+.easyui-accordion ul li div {
+	margin: 2px 0px;
+	padding-left: 10px;
+	padding-top: 2px;
+}
+
+.easyui-accordion ul li div.hover {
+	border: 1px dashed #99BBE8;
+	background: #E0ECFF;
+	cursor: pointer;
+}
+
+.easyui-accordion ul li div.hover a {
+	color: #416AA3;
+}
+
+.easyui-accordion ul li div.selected {
+	border: 1px solid #99BBE8;
+	background: #E0ECFF;
+	cursor: default;
+}
+
+.easyui-accordion ul li div.selected a {
+	color: #416AA3;
+	font-weight: bold;
+}
+
+.easyui-validatebox {
+	border: 1px solid #95B8E7;
+}
+
+input.easyui-validatebox {
+	height: 20px;
+}
+
+/**tab  icon*/
+.icon {
+	width: 18px;
+	line-height: 18px;
+	display: inline-block;
+}
+
+.content ul {
+	list-style-type: none;
+	margin: 0px;
+	padding: 10px;
+}
+
+.content ul li {
+	padding: 2px;
+	float: left;
+	line-height: 22px;
+}
+
+.content td {
+	line-height: 22px;
+	padding: 2px;
+	border: 0px;
+	
+	text-align: left;
+}
+.content td label{
+	white-space: nowrap;
+}
+.content th {
+	line-height: 22px;
+	padding: 2px;
+	border: 0px;
+	white-space: nowrap;
+	text-align: right;
+	font-weight: normal;
+}
+
+/**订单详情**/
+.orderInfo{
+	padding-left: 20px;
+}
+.orderInfo td {
+	line-height: 22px;
+	padding: 2px;
+	border: 0px;
+	text-align: left;
+}
+.orderInfo th {
+	line-height: 22px;
+	padding: 2px;
+	margin-left:10px;
+	border: 0px;
+	white-space: nowrap;
+	text-align: left;
+	font-weight: normal;
+}
+
+.link {
+	color: Blue;
+}
+
+.search {
+	padding: 5px 5px 5px 10px;
+	margin-right: 160px;
+}
+
+.search ul {
+	list-style-type: none;
+	margin: 0px;
+	padding: 0px
+}
+
+.search li {
+	float: left;
+	display: block;
+	padding-right: 10px;
+	vertical-align: middle;
+	line-height: 22px;
+	height: 30px;
+}
+
+.controls {
+	float: right;
+	width: 160px;
+	margin: 0px;
+	padding: 5px 0 0 5px;
+}
+
+.search td {
+	line-height: 22px;
+	padding: 2px;
+	border: 0px;
+	white-space: nowrap;
+	text-align: left;
+}
+
+.search th {
+	line-height: 22px;
+	padding: 2px;
+	border: 0px;
+	white-space: nowrap;
+	text-align: right;
+	font-weight: normal;
+}
+
+.clear {
+	border-top: 1px solid transparent !important;
+	margin-top: -1px !important;
+	border-top: 0;
+	margin-top: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+em.red {
+	color: Red;
+}
+
+.info {
+	color: Red;
+}
+
+select.input_s {
+	border: 1px solid #95B8E7;
+	height: 20px;
+}
+
+input.input_s {
+	border: 1px solid #95B8E7;
+	height: 20px;
+}

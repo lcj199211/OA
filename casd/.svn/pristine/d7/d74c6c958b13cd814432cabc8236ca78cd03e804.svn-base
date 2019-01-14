@@ -1,0 +1,376 @@
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<html>
+<head>
+<title>首页</title>
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+<style type="text/css">
+</style>
+</head>
+<body>
+	<div>
+		<div>
+			<input type="hidden" id="taskid" value="${taskid}"> 
+			<input type="hidden" id="taskName" value="${taskName}">
+			<table>
+				<tr>
+					<c:choose>
+						<c:when test="${not empty data.own_seal_filePath}">
+							<a id="loadfied" class="easyui-linkbutton" onclick="loadSeries()">下载附件</a>
+						</c:when>
+						<c:otherwise>
+							<a id="loadfied" class="easyui-linkbutton">无附件</a>
+						</c:otherwise>
+					</c:choose>
+
+				</tr>
+			</table>
+		</div>
+		<div>
+			<fieldset id="fd1" style="width:800px;">
+				<form id="jvForm" action="" method="post">
+
+					<legend>
+						<span>基本信息</span>
+					</legend>
+					<div class="fieldset-body">
+						<table class="form-table" border="0" cellpadding="1"
+							cellspacing="2">
+							<tr>
+								<td><input type="hidden" name="own_seal_id"
+									id="own_seal_id" value="${data.own_seal_id}" /></td>
+							</tr>
+						 	<tr>
+								<td>文件名称：</td>
+								<td><input style="width:250px" type="text" name="own_seal_fileName"
+									id="own_seal_fileName" value="${data.own_seal_fileName}"/></td>
+								<td>预结算金额：</td>
+								<td><input type="text" name="own_seal_settle"
+									id="own_seal_settle" value="${data.own_seal_settle}"/></td>
+								<td><a href="javascript:void(0)"
+									onclick="wen('companyList.do')">用章公司(选择):</a></td>
+									<td><input type="text"
+							name="own_seal_companyName" id="own_seal_companyName"
+							value="${data.company_name}" readonly="readonly"/></td>
+							
+							<td style="display: none"><input type="text"
+							name="own_seal_company" id="own_seal_company"
+							value="${data.own_seal_company}" class="mini-textbox"/></td> 
+							</tr>
+							<tr>
+
+								<td>主送单位：</td>
+								<td><input style="width:250px" type="text" name="own_seal_sender"
+									id="own_seal_sender" value="${data.own_seal_sender}" /></td>
+
+
+								<td class="form-label" style="display: none">文件路径：</td>
+								<td style="display: none"><input type="text"
+									name="own_seal_filePath" id="own_seal_filePath"
+									value="${data.own_seal_filePath}" /></td>
+								<td class="form-label" style="display: none">创建时间:</td>
+								<td style="display: none"><input type="text"
+									name="own_seal_creatTime" id="own_seal_creatTime"
+									value="${data.own_seal_creatTime}"/></td>
+
+								<td>用章类别：</td>
+								<td colspan="3"><input type="checkbox"
+									name="own_seal_chapCategory" value="1"/>公章 <input
+									type="checkbox" name="own_seal_chapCategory" value="2"/>业务章 <input
+									type="checkbox" name="own_seal_chapCategory" value="3" />出图章 <input
+									type="checkbox" name="own_seal_chapCategory" value="4" />竣工章 <input
+									type="checkbox" name="own_seal_chapCategory" value="5" />项目章</td>
+							  </tr>
+
+							<tr>
+								<td>盖章用途：</td>
+								<td colspan="10"><textarea type="text"
+										style="width:100%;height:60px;resize:none;"
+										name="own_seal_remark" id="own_seal_remark">${data.own_seal_remark}</textarea></td>
+							</tr>
+						</table>
+					</div>
+
+				</form>
+			
+			</fieldset>
+
+		</div>
+
+
+		<div>
+			<table class="form-table" border="0">
+				<c:if test="${taskName !='起始人' && taskName !='公司盖章'}">
+					<tr>
+						<td class="form-label" style="width:80px;"><h2>下一审核人：</h2></td>
+					</tr>
+					<tr>
+						<td style="width:150px"><select name="username" id="username"
+							style="width:120px;">
+								<c:forEach items="${userList}" var="user">
+									<option value="${user.userid}">${user.username}</option>
+								</c:forEach>
+						</select></td>
+					</tr>
+				</c:if>
+
+			
+					<tr>
+						<td><h2>审核意见:</h2></td>
+					</tr>
+					<tr>
+						<td style="width:150px"><textarea
+								style="width:818px;height:60px;" type="text" name="options"
+								id="options"></textarea></td>
+					</tr>
+					<tr>
+						   <td style="padding-left:80%;">
+						   <a class="easyui-linkbutton" href="javascript:;" id="btnSave"
+										onclick="pass_seal(true)" style="width: 50px;">提交</a>
+											<c:if test="${taskName !='发起人' && taskName != '起始人'}">
+							 <a class="easyui-linkbutton" href="javascript:;" id="btnSave"
+										onclick="pass_seal(false)" style="width: 50px;">回退</a></c:if>
+						  <c:if test="${taskName=='发起人'}">
+								<a class="easyui-linkbutton" href="javascript:;"
+									onclick="updeteSeal();">修改单据</a>
+							</c:if></td>
+					</tr>
+			
+
+				<%-- <c:if test="${taskName == '发起人' || taskName == '起始人'}">
+					<tr>
+						<td><c:forEach var="bot" items="${bot}">
+								<c:if test="${bot=='提交'}">
+									<a class="easyui-linkbutton" href="javascript:;" id="btnSave"
+										onclick="pass_seal()">${bot}</a>
+								</c:if>
+								<c:if test="${bot=='驳回'}">
+									<a class="easyui-linkbutton" href="javascript:;" id="btnBack"
+										onclick="rejects()">${bot}</a>
+								</c:if>
+							</c:forEach> <c:if test="${taskName=='发起人'}">
+								<a class="easyui-linkbutton" href="javascript:;"
+									onclick="updeteSeal();">修改单据</a>
+							</c:if></td>
+					</tr>
+				</c:if> --%>
+
+			</table>
+		</div>
+		<div style="margin:20px 0;">
+			<table id="history" class="easyui-datagrid" title="审批记录"
+				style="width:830px;height:150px"
+				data-options="
+				iconCls: 'icon-edit',
+				singleSelect: true,">
+				<thead>
+					<tr>
+						<th data-options="field:'username',width:80">审核人</th>
+						<th data-options="field:'MESSAGE_',width:300">审核意见</th>
+						<th data-options="field:'center_name',width:100">中心</th>
+						<th data-options="field:'department_name',width:200">部门</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+
+	<div id="centers" class="easyui-window"
+		data-options="region:'center',title:'请选择值'" closed="true"
+		style="height: 500px; width: 800px"></div>
+
+	<!-- 驳回js调用 -->
+	<script
+		src="<%=request.getContextPath()%>/res/jquery-easyui/wangEditor/release/rejects.js"
+		type="text/javascript"></script>
+	<script type="text/javascript">
+		$(function() {
+			//加载历史记录
+			var historys = ${history}.history;
+			$('#history').datagrid('loadData', historys);
+			
+			category();
+	
+		});
+		
+	
+		//给公章类型赋值
+		function category() {
+
+			var category = "${data.own_seal_chapCategory}".split(",");
+			for (var i = 0; i < category.length; i++) {
+				$(
+						'input[name=own_seal_chapCategory][value='
+								+ category[i] + ']').attr('checked', 'checked');//很简单就不说了哦
+
+			}
+		}
+
+		//选择用章公司列表
+		function wen(src) {
+			var hrefs = "<iframe id='son' src='"
+					+ src
+					+ "' allowTransparency='true' style='border:0;width:99%;height:99%;padding-left:2px;' frameBorder='0'></iframe>";
+			$("#centers").html(hrefs);
+			$("#centers").window("open");
+		}
+		//用章公司赋值
+		function data(rowData) {
+			var company_name = rowData.company_name === undefined ? ""
+					: rowData.company_name;
+			$("#own_seal_companyName").val(company_name);
+			$("#own_seal_company").val(rowData.company_id);
+		}
+
+		//审核
+		function pass_seal(sign) {
+			
+			obj = document.getElementsByName("own_seal_chapCategory");
+			check_val = [];
+			for (k in obj) {
+				if (obj[k].checked)
+					check_val.push(obj[k].value);
+			}
+		    var username='';
+				if(sign){
+			      username=$('#username option:selected').text();//选中的文本
+				}
+			var userid = $("#username").val();
+			var taskName = $("#taskName").val(); //获取节点名称
+			var options = $("#options").val();
+			var taskid = $("#taskid").val();
+
+			var category = check_val.toString();
+			if (category == null || category == '') {
+
+				$.messager.alert("提示", "请勾选章类型", "info");
+				return false;
+			}
+
+			if (taskName != '起始人') {
+				if (options == '' || options == null) {
+					$.messager.alert("提示", "请填写审核意见", "info");
+					return false;
+				}
+			} else {
+				options = "已确认盖章";
+			}	
+			$.messager.confirm('提示！', '你确定提交给：'+username, function(r) {
+				if (r) {
+					 $.messager.progress({ 
+					       title: '提示', 
+					       msg: '正在处理中，请稍候……', 
+					       text: '' 
+					    });
+					$.ajax({
+						type : 'POST',
+						url : 'pass_seal.do',
+						data : {
+							'options' : options,
+							'username' : userid,
+							'taskName' : taskName,
+							'taskid' : taskid,
+							'category' : category,
+							'sign' : sign,
+
+						},
+						success : function(data) {
+							  $.messager.progress('close');
+							if (data.Success) {
+								$.messager.alert("提示", data.Msg, "info",
+										function() {
+											location.href = "findTaskList.do";
+										});
+							} else {
+								$.messager.alert("操作提示", data.Msg, "error");
+							}
+
+						}
+
+					}); 
+				}
+				
+			});
+			
+		}
+
+		//修改单据信息
+		function updeteSeal() {
+
+			/*   obj = document.getElementsByName("own_seal_chapCategory");
+			    check_val = [];
+			    for(k in obj){
+			        if(obj[k].checked)
+			            check_val.push(obj[k].value);
+			    }
+			 */
+
+			var own_seal_id = $("#own_seal_id").val();
+			if (own_seal_id == null || own_seal_id == '') {
+				$.messager.alert("提示", "数据错误", "info");
+				return false;
+			}
+			$.messager.confirm('提示！', '你确定提交吗？', function(r) {
+				if (r) {
+					$.ajax({
+						//几个参数需要注意一下
+						type : "POST",//方法类型
+						url : "update_Seal.do",//url
+						data : $("#jvForm").serialize(),
+						success : function(data) {
+
+							if (data.Success) {
+								$.messager.alert("提示", data.Msg, "info",
+										function() {
+
+											location.reload(true);
+										});
+							} else {
+								$.messager.alert("提示", data.Msg, "error");
+							}
+
+						},
+						error : function(data) {
+
+							alert("异常");
+						}
+
+					});
+				}
+
+			});
+
+		}
+		
+		//下载附件
+		function loadSeries() {
+			var own_seal_filePath = $('#own_seal_filePath')
+					.val();
+			if (own_seal_filePath == "") {
+				alert("没有附件！");
+				return false;
+			}
+			var form = $("<form>");
+			$('body').append(form);
+			form.attr('style', 'display:none');
+			form.attr('target', '');
+			form.attr('method', 'post');
+			form.attr('action', "downloadseal.do?own_seal_filePath="+ own_seal_filePath);//下载文件的请求路径  
+			form.submit();
+		}
+
+		
+	</script>
+</body>
+</html>

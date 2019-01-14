@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.manage.NoticeDao">
+   
+ 
+   
+   <insert id="savaNotice" useGeneratedKeys="true" keyProperty="notice_id" parameterType="com.casd.entity.manage.Notice">
+       insert into  manage_notice(notice_id,user_id,start_time,status,company_id,notice_content) 
+        VALUES (0,#{user_id},#{start_time},#{status},#{company_id},#{notice_content})  
+	  
+   </insert>
+   
+   
+    <select id="noticeList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getNoticeCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where}  
+       
+    </select>
+ 
+ <update id="updateNotice" parameterType="com.casd.entity.manage.Notice" >
+ 
+        update manage_notice 
+        <set>
+        	<if test="status!=null">
+         		`status`=#{status},
+         	</if>
+         	<if test="company_id!=null">
+         		company_id=#{company_id},
+         	</if>
+         	<if test="notice_content!=null">
+         		notice_content=#{notice_content}
+         	</if>
+        </set>
+        where notice_id=#{notice_id}
+  
+ </update>
+
+</mapper>

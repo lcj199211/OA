@@ -1,0 +1,196 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+	
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>	
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<title>首页</title>
+<link
+	href="<%=request.getContextPath()%>/res/jquery-easyui/themes/icon.css"
+	rel="stylesheet" />
+<link
+	href="<%=request.getContextPath()%>/res/jquery-easyui/themes/default/easyui.css"
+	rel="stylesheet" />
+<script
+	src="<%=request.getContextPath()%>/res/jquery-easyui/jquery.min.js"></script>
+<script
+	src="<%=request.getContextPath()%>/res/jquery-easyui/jquery.easyui.min.js"></script>
+<script
+	src="<%=request.getContextPath()%>/res/jquery-easyui/locale/easyui-lang-zh_CN.js"></script>
+<style>
+#div_leftmenu div {
+	font-size: 15px;
+}
+
+#div_leftmenu div ul {
+	margin: 10px 10px 10px 10px;
+	padding: 0;
+	overflow: hidden;
+	line-height: 40px;
+}
+
+#div_leftmenu div ul li {
+	list-style-type: none;
+	background-color: #DFE2E3;
+	text-align: center;
+	margin-bottom: 2px;
+}
+
+#div_leftmenu div ul li:last-of-type {
+	margin-bottom: 0;
+}
+
+
+
+
+
+#menu {
+	font-size: 12px;
+	font-weight: bolder;
+}
+#menu li{
+	list-style-image: none;
+	list-style-type: none;
+	background-color: #999999;
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #000000;
+	float: left;
+}
+#menu li a{
+	color: #FFFFFF;
+	text-decoration: none;
+	margin: 0px;
+	padding-top: 8px;
+	display: block; /* 作为一个块 */
+	padding-right: 50px; /* 设置块的属性 */
+	padding-bottom: 8px;
+	padding-left: 50px;
+}
+#menu li a:hover{
+	background-color: #0099CC;
+}
+
+#newMenu {
+	font-size: 12px;
+	font-weight: bolder;
+}
+#newMenu li{
+	list-style-image: none;
+	list-style-type: none;
+	background-color: #87CEFA;
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #000000;
+	float: left;
+}
+#newMenu li a{
+	color: #FFFFFF;
+	text-decoration: none;
+	margin: 0px;
+	padding-top: 8px;
+	display: block; /* 作为一个块 */
+	padding-right: 50px; /* 设置块的属性 */
+	padding-bottom: 30px;
+	padding-left: 50px;
+	font-size:18px;
+}
+#newMenu li a:hover{
+	background-color: #0099CC;
+}
+
+.message  li{
+	width:460px ;
+	font-size:20px;
+	list-style:none;
+}
+.message li a{
+	color: #000000;
+	text-decoration: none;
+}
+
+
+</style>
+</head>
+<body class="easyui-layout" style="font-size: 15px;">
+	<form id="form1" runat="server">
+		<!--左侧-->
+		<div data-options="region:'west',title:' '"
+			style="width: 250px; background-color: 	#87CEFA; font-size: inherit;">
+			<div id="div_welcome"
+				style="margin: 15px 0 5px 0; text-align: center;">欢迎${loginUser.username==null?"游客":loginUser.username}
+			</div>
+			<div style="text-align:right;">
+				<a style="font-size:30px;" href="<%=request.getContextPath()%>/login.do" class="easyui-linkbutton"  plain="true" >注销</a>
+			</div>
+				
+			<div id="div_leftmenu" class="easyui-accordion">	
+				<c:forEach items="${menuList}" var="menu" >
+					<c:if test="${menu.parent_id==-1}">
+	    				<div title="${menu.menu_name}">
+	    					<c:forEach items="${menu.childMenus}" var="secondChild" >
+		    					<c:if test="${null!=secondChild.menu_url}">
+									 <ul>
+									    <li style="cursor:pointer" id="menu" onclick="addTab('${secondChild.menu_name}','${secondChild.menu_url}')">
+									    	 <a style="cursor:pointer" id="name">${secondChild.menu_name}</a>
+									    </li>
+									    
+									    	 <%-- <c:forEach items="${secondChild.childMenus}" var="thirdChild" > 
+									    		<ul id="ds" onclick="his()" style=" margin:10px 10px 10px 10px; height: 30px; width: 100px;color: red;">
+									    			<li>
+									    				${thirdChild.menu_name}
+									    				<a>ca</a>
+									    			</li>
+									    		</ul>
+									    	 </c:forEach> --%>
+									    	
+									</ul> 
+								</c:if>
+							</c:forEach>	
+						</div>
+					</c:if>		
+				</c:forEach>
+			</div>	
+		</div>
+		
+		
+		<!--右侧-->
+				<div data-options="region:'center'" style="padding: 1px;" >
+	 	<div id="tt" data-options="region:'center'" class="easyui-tabs "  style="height: 100%; width: 100%">
+	 	
+			<div title="欢迎使用" closable="true" style="padding:10px;">
+			<div style="text-align: center;background: #eee ;width: 100%;height:100%; display: table;">
+				<span style="display: table-cell; vertical-align: middle; ">
+				<img style="display: inline-block;vertical-align:middle" alt="" src="../res/images/backgrounds/logo1.png" width=500px; height=500px;">
+				</span>
+			</div>
+				
+        		</div>
+        	</div> 
+		</div>
+	</form>
+	
+	
+	
+	
+	<script type="text/javascript">
+    function addTab(title, url){
+	if ($('#tt').tabs('exists', title)){
+		$('#tt').tabs('select', title);
+	} else {
+		var content = '<iframe scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+		$('#tt').tabs('add',{
+			title:title,
+			content:content,
+			closable:true
+		});
+	}
+}
+
+ 
+  
+</script>
+	
+</body>
+</html>

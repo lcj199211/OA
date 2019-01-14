@@ -1,0 +1,381 @@
+package com.casd.controller.sciAndTec;
+
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.activiti.engine.impl.bpmn.data.Data;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.config.MvcNamespaceHandler;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.construct.Construct;
+import com.casd.entity.hr.Resign;
+import com.casd.entity.manage.AchReview;
+import com.casd.entity.sciAndTec.CheckPro;
+import com.casd.entity.sciAndTec.CheckRecordEntry;
+import com.casd.entity.sciAndTec.CheckRecordHead;
+import com.casd.entity.uc.User;
+import com.casd.service.construct.ConstructService;
+import com.casd.service.finance.MaterialService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.manage.AchReviewService;
+import com.casd.service.manage.SupOpinionService;
+import com.casd.service.sciAndTec.MaintService;
+import com.casd.service.uc.UserService;
+
+@Controller
+@RequestMapping("/admin")
+public class MaintController {
+	
+	@Autowired
+	private ConstructService constructService;
+	@Autowired
+	private MaintService maintService;
+	
+	
+	/**
+	 * 保养项目list
+	 */
+	@RequestMapping(value = "/sciAndTecList", method = RequestMethod.GET)
+	public ModelAndView sciAndTecList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		int projectDep=Integer.valueOf(request.getParameter("constuct_project_dep_id"));
+		mv.addObject("projectDep", projectDep);
+		mv.setViewName("sciAndTec/sciAndTecConList");
+		return mv;
+	}
+
+	@RequestMapping(value = "/sciAndTecList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> sciAndTecList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		int projectDep=Integer.valueOf(request.getParameter("constuct_project_dep_id"));
+
+		sbf.append("  construct_project_table project left join manage_contract contract on project.construct_project_contractId=contract.manage_contract_id where 1=1 and construct_project_dep="
+				+ projectDep + "");
+		
+		String construct_project_name = request.getParameter("construct_project_name");
+		if (StringUtils.hasText(construct_project_name)) {
+			sbf.append(" and project.construct_project_name like '%" + construct_project_name
+					+ "%'");
+		}
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	
+	/**
+	 * 检查内容list
+	 */
+	@RequestMapping(value = "/maintainCheckConList", method = RequestMethod.GET)
+	public ModelAndView maintainCheckConList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("sciAndTec/maintainCheckConList");
+		return mv;
+	}
+
+	@RequestMapping(value = "/maintainCheckConList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> maintainCheckConList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+
+		sbf.append("  maintain_checkPro checkPro inner join maintain_checkContent checkContent on "
+				+ " checkContent.maintain_checkContent_parentId=checkPro.maintain_checkPro_id where 1=1 ");
+		
+		String maintain_checkPro_name = request.getParameter("maintain_checkPro_name");
+		if (StringUtils.hasText(maintain_checkPro_name)) {
+			sbf.append(" and maintain_checkPro_name like '%" + maintain_checkPro_name
+					+ "%'");
+		}
+		sbf.append(" order BY maintain_checkPro_name ");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	/**
+	 * 检查内容增改
+	 */
+	@RequestMapping(value = "/maintainCheckContent", method = RequestMethod.GET)
+	public ModelAndView maintainCheckContent(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		JSONObject dataObject=new JSONObject();
+		CheckPro checkPro=new CheckPro();
+		String type="'new'";
+		if(StringUtils.hasText(request.getParameter("maintain_checkPro_id"))){
+			type="'update'";
+			Map<String, Object> paramMap=new HashMap<String, Object>();
+			int maintain_checkPro_id=Integer.valueOf(request.getParameter("maintain_checkPro_id").toString());
+			StringBuffer sbf = new StringBuffer();
+			sbf.append(" maintain_checkPro  where 1=1 and maintain_checkPro_id="
+					+ maintain_checkPro_id + "");
+			String fields=" * ";
+			paramMap.put("where", sbf.toString());
+			paramMap.put("fields", fields);
+			Map<String, Object> data= maintService.getCheckContentById(paramMap);
+			checkPro =(CheckPro) data.get("checkPro");
+			List<Map<String, Object>> entry =(List<Map<String, Object>>) data.get("checkConList");
+			dataObject.put("checkPro", checkPro);
+			dataObject.put("entry", entry);
+			
+			
+		}else{
+			checkPro.setMaintain_checkPro_id(0);
+			dataObject.put("checkPro", checkPro);
+
+		}
+		mv.addObject("data",dataObject);
+		mv.addObject("type",type );
+		mv.setViewName("sciAndTec/maintainCheckContent");
+		return mv;
+	}
+	
+	
+	
+	@RequestMapping(value = "/saveCheckCon", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> saveCheckCon(HttpServletRequest request,
+			CheckPro checkPro) throws Exception {
+		
+		JSONArray myJsonArray = JSONArray.fromObject(request
+				.getParameter("rows"));
+		maintService.saveCheckCon(checkPro,myJsonArray);
+		return null;
+	}
+	
+	
+	/**
+	 * 删除分录
+	*/
+	@RequestMapping(value = "/delete_checkCon", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> delete_checkCon(HttpServletRequest request) throws Exception {
+		Map<String, Object> json=new HashMap<String, Object>();
+		try {	
+		String cid = request.getParameter("cid");
+		StringBuffer sbf = new StringBuffer();
+		Map<String, Object> map=new HashMap<String, Object>();
+		sbf.append(" maintain_checkContent where maintain_checkContent_id =" + cid + "");
+		map.put("where", sbf.toString());
+		maintService.delete_checkCon(map);
+		json.put("msg", "删除成功！");
+		} catch (Exception e) {
+			json.put("msg", "删除失败！");
+			e.printStackTrace();
+		}
+		return json;
+	}
+	
+	
+	/**
+	 * 删除系统
+	*/
+	@RequestMapping(value = "/dele_checkPro", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> dele_checkPro(HttpServletRequest request) throws Exception {
+		Map<String, Object> json=new HashMap<String, Object>();
+		try {	
+		String cid = request.getParameter("ids");
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("cid", cid);
+		maintService.dele_checkPro(map);
+		json.put("msg", "删除成功！");
+		} catch (Exception e) {
+			json.put("msg", "删除失败！");
+			e.printStackTrace();
+		}
+		return json;
+	}
+	
+	
+	/**
+	 * 检查内容月份
+	 */
+	@RequestMapping(value = "/maintainCheckRecordList", method = RequestMethod.GET)
+	public ModelAndView maintainCheckRecordList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("maintain_checkRecord_head_id",  0);
+		mv.addObject("maintain_checkRecord_head_proId",  request.getParameter("construct_project_id").toString());
+		mv.addObject("maintain_checkRecord_head_contractId",  request.getParameter("manage_contract_id").toString());
+		mv.setViewName("sciAndTec/maintainCheckRecordList");
+		return mv;
+	}
+
+	@RequestMapping(value = "/maintainCheckRecordList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> maintainCheckRecordList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		String construct_project_id = request.getParameter("construct_project_id");
+
+		sbf.append("  maintain_checkRecord_head head left join manage_contract contract on "
+				+ " head.maintain_checkRecord_head_contractId=contract.manage_contract_id where 1=1 and head.maintain_checkRecord_head_proId="+construct_project_id+" ");
+		
+		String maintain_checkRecord_head_date = request.getParameter("maintain_checkRecord_head_date");
+		if (StringUtils.hasText(maintain_checkRecord_head_date)) {
+			sbf.append(" and head.maintain_checkRecord_head_date like '%" + maintain_checkRecord_head_date
+					+ "%'");
+		}
+		sbf.append(" order BY maintain_checkRecord_head_date DESC");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	
+	
+	/**
+	 * 检查详细
+	 */
+	@RequestMapping(value = "/maintainCheckRecord", method = RequestMethod.GET)
+	public ModelAndView maintainCheckRecord(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		
+		mv.setViewName("sciAndTec/maintainCheckRecord");
+		return mv;
+	}
+	
+	
+	@RequestMapping(value = "/maintainCheckRecord", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> maintainCheckRecord(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		String maintain_checkRecord_head_id = request.getParameter("maintain_checkRecord_head_id");
+
+		sbf.append("  maintain_checkRecord_entry  where 1=1 and maintain_checkRecord_entry_parentId="+maintain_checkRecord_head_id+" ");
+		
+		String maintain_checkPro_name = request.getParameter("maintain_checkPro_name");
+		if (StringUtils.hasText(maintain_checkPro_name)) {
+			sbf.append(" and maintain_checkPro_name like '%" + maintain_checkPro_name
+					+ "%'");
+		}
+		sbf.append(" order BY maintain_checkRecord_entry_system ");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	
+	/**
+	 * 添加检查记录
+	 */
+	@RequestMapping(value = "/update_record", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> update_record(CheckRecordEntry checkRecordEntry) {
+
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			maintService.update_record(checkRecordEntry);
+			json.put("Success", true);
+			json.put("Msg", "修改成功");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "修改失败");
+		}
+		return json;
+	}
+
+	
+	/**
+	 * 添加检查记录
+	 */
+	@RequestMapping(value = "/add_record", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> add_record(CheckRecordHead checkRecordHead) {
+
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			maintService.add_record(checkRecordHead);
+			json.put("Success", true);
+			json.put("Msg", "添加成功");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "添加失败");
+		}
+		return json;
+	}
+	
+	
+	/**
+	 * 删除检查记录
+	 */
+	@RequestMapping(value = "/dele_checkRecord", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object>  dele_checkRecord(HttpServletRequest request) {
+
+		Map<String, Object> json=new HashMap<String, Object>();
+		try {
+			String id=request.getParameter("ids");
+			maintService.dele_checkRecord(id);
+			json.put("Success", true);
+			json.put("Msg", "删除成功");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "删除失败");
+		}
+		return json;
+	}
+	
+	
+}

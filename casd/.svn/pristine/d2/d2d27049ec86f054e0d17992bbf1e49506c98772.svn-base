@@ -1,0 +1,25 @@
+package com.casd.service.hr;
+
+import java.util.Map;
+
+import net.sf.json.JSONArray;
+
+import com.casd.entity.uc.User;
+
+public interface HregisterService {
+	
+	public Map<String, Object> getAllContrac(String userid);
+	
+	public void deleteHregister(Map<String, Object> map);
+	
+	public void deleteContract(Map<String, Object> map);
+	
+	public void deleteHrSalary(Map<String, Object> map);
+	
+	public void deleteHrecord(Map<String, Object> map);
+
+	
+	public void savexistence(User user,JSONArray myJsonArray, JSONArray myJsonArray2,JSONArray myJsonArray3,JSONArray myJsonArray4)throws Exception;
+	
+
+}

@@ -1,0 +1,297 @@
+package com.casd.serviceimpl.finance;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.utils.JsonUtil;
+import com.casd.dao.finance.MaterialDao;
+import com.casd.dao.finance.MaterialPriceDao;
+import com.casd.dao.finance.SupplierDao;
+import com.casd.entity.finance.Construct_change_head;
+import com.casd.entity.finance.Construct_change_price;
+import com.casd.entity.finance.Supplier;
+import com.casd.entity.uc.User;
+import com.casd.service.finance.SupplierService;
+import com.casd.service.flow.FlowService;
+
+
+
+@Service
+public class SupplierServiceImpl implements SupplierService {
+	
+	@Autowired
+	private SupplierDao supplierDao;
+
+	
+	@Autowired
+	private MaterialPriceDao  materialPriceDao;
+
+	@Autowired
+	private MaterialDao materialDao;
+	
+
+	@Autowired
+	private  FlowService flowService;
+
+	@Override
+	public void saveSupplier(Supplier supplier) {
+		// TODO Auto-generated method stub
+		supplierDao.saveSupplier(supplier);
+	}
+
+	@Override
+	public void deleSupplier(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		supplierDao.deleSupplier(map);
+	}
+
+
+	@Override
+	public int add_change_head(Construct_change_head cch) {
+		supplierDao.add_change_head(cch);
+
+		return 0;
+	}
+	
+	//启动流程更改状态
+	@Transactional
+	public void start_change_price(HttpServletRequest request) {
+		
+		 User user=(User) request.getSession().getAttribute("loginUser");
+	 		Map<String, Object> paramMap=new HashMap<String, Object>();
+			paramMap.put("code", "change_price_flow");
+			paramMap.put("order",1);
+			List<Map<String, Object>> auditorList =flowService.getAuditors(paramMap);
+			String username=null;
+			for (Map<String, Object> c:auditorList) {
+				username=c.get("username").toString();
+			}
+			
+	 		Map<String, Object> linkMap = new HashMap<String, Object>();
+	     	String bizId=	request.getParameter("bizId");	
+			linkMap.put("auditor", username); // 审批人
+			linkMap.put("flow_bill_id", bizId); // 单据id
+			linkMap.put("flow_submitter", user.getUsername()); // 申请人
+			linkMap.put("flow_bill_url", "change_price_audit.do");// 审核界面url
+			linkMap.put("flow_bill_type","变更价格"); // 审核单据类型
+			linkMap.put("status", 1);// 审核界面url
+			flowService.saveFlowAudit(linkMap);	 
+			 linkMap.put("filds","status="+1);
+			 linkMap.put("billID",bizId);
+			 supplierDao.updateStatus(linkMap);
+		 
+		
+	
+		
+	}
+
+
+	@Override
+	@Transactional
+	public void change_examine(HttpServletRequest request) {
+	
+		Map<String, Object> map=new HashMap<String, Object>();
+		String billID =request.getParameter("id");
+		String option =request.getParameter("option");
+		int auditID =Integer.valueOf(request.getParameter("auditID"));
+		String auditor=request.getParameter("auditor");
+		int flow_node_order = Integer.parseInt(request.getParameter("flow_node_order").toString());
+		map.put("billID",billID);
+		map.put("option",option);
+		map.put("auditID",auditID);
+		map.put("flow_node_order", flow_node_order);
+	    map.put("where", "flow_audit_table");
+	   flowService.auditBill(map, auditor);
+	    int status=1;
+		if(auditor!=""){
+			status=2;
+		}else{	
+			Map<String, Object> param=new HashMap<String, Object>();
+			String fields="a.construct_material_price ,a.construct_latest_price,a.construct_lowest_price,a.construct_material_priceId,"
+					    + "b.construct_material_price as new_price,b.construct_latest_price as latest_price,"
+					    + "b.construct_lowest_price as lowest_price";	
+			StringBuffer sbf=new StringBuffer();
+			 sbf.append(" construct_material_price a JOIN construct_change_price b"
+			 		  + " ON a.construct_material_priceId = b.construct_material_priceId"
+			 		  + " where b.construct_change_headId="+billID);
+			 param.put("fields", fields);
+			 param.put("where", sbf.toString());
+		   List<Map<String, Object>>dataList= supplierDao.findPriceratio(param);	
+		  
+		   for (Map<String, Object> c:dataList) {
+			   double material_price=Double.parseDouble(c.get("new_price").toString());
+			   double lowest_price=Double.parseDouble(c.get("lowest_price").toString());
+			   int material_priceId=Integer.parseInt(c.get("construct_material_priceId").toString());
+			   String wath = "";
+			   if (material_price<lowest_price||lowest_price==0) {
+				          wath+=" construct_material_price="+lowest_price;
+				          wath+=",construct_lowest_price="+lowest_price;
+				   
+			   }else {
+				      wath+=" construct_material_price="+material_price;
+
+		        	}
+			   wath+="  where construct_material_priceId="+material_priceId;
+			   param.put("wath", wath);
+			   materialPriceDao.update_price(param);
+			
+		   }
+		   
+			 status=3;
+			 map.put("filds","status="+status);
+			 supplierDao.updateStatus(map);
+		}
+	  	
+	}
+
+
+	@Override
+	@Transactional
+	public void new_update_price(String id,String price) {
+		Map<String, Object> map=new HashMap<String, Object>();
+	    String wath=" construct_material_price="+price
+	    		  + " where construct_material_priceId="+id;	 
+	    map.put("wath", wath);
+		supplierDao.new_update_price(map);
+		
+		
+	}
+
+
+	@Override
+	@Transactional
+	public Object add_price(HttpServletRequest request) throws Exception {
+		String list=	request.getParameter("datas");
+	 	   
+ 	 	List<Map<String, Object>> dataList=JsonUtil.parseJsonArrayStrToListForMaps(list);
+ 	 	int bizId=Integer.parseInt(request.getParameter("bizId"));
+ 	 	String  where="construct_change_price a where 1=1 ";
+ 	 	Map<String, Object> json=new HashMap<String, Object>();
+ 	 	Map<String, Object> map=new HashMap<String, Object>();
+ 	 	
+ 	 	for (Map<String, Object> c: dataList) {
+ 	 	   map.clear();
+			Construct_change_price cch=new Construct_change_price();
+			cch.setConstruct_change_id(Integer.parseInt(c.get("construct_material_priceId").toString()));
+			cch.setConstruct_change_headId(Integer.parseInt(c.get("construct_material_priceId").toString()));
+			cch.setConstruct_material_priceId(Integer.parseInt(c.get("construct_material_priceId").toString()));
+			cch.setConstruct_material_name(c.get("construct_material_name").toString());
+			cch.setConstruct_material_model(c.get("construct_material_model").toString());
+			cch.setConstruct_material_unit(c.get("construct_material_unit").toString());
+			cch.setConstruct_material_supplier(c.get("construct_material_supplier").toString());	
+			cch.setConstruct_material_price(Double.parseDouble(c.get("construct_material_price").toString()));
+			cch.setConstruct_material_supplierId(Integer.parseInt(c.get("construct_material_supplierId").toString()));
+			cch.setConstruct_lowest_price(Double.parseDouble(c.get("construct_lowest_price").toString()));
+			cch.setConstruct_latest_price(Double.parseDouble(c.get("construct_latest_price").toString()));
+			cch.setConstruct_change_headId(bizId);
+			where+=" and a.construct_change_headId="+bizId
+					+ " AND construct_material_priceId="+c.get("construct_material_priceId");
+			map.put("where",where);
+	     int count= materialPriceDao.getMaterialPriceCount(map);
+	  
+	     if(count>0){
+	    	 throw new Exception("数据重复编号："+c.get("construct_material_priceId"));
+	     }
+			
+	        materialPriceDao.add_NewPrice(cch);
+		
+ 	 	}
+		return json;
+	}
+	@Transactional
+	public void deleteNewPrice(Map<String, Object> map) {
+		materialPriceDao.deleteNewPrice(map);
+		
+	}
+   
+	
+	//驳回价格
+	@Transactional
+	public void back_Newprice(HttpServletRequest request) {
+		
+		Map<String, Object> map=new HashMap<String, Object>();
+		String billID =request.getParameter("flow_bill_id");
+		String option =request.getParameter("option");
+		int auditID =Integer.valueOf(request.getParameter("auditID"));
+		int last_auditid =Integer.valueOf(request.getParameter("last_auditid"));
+		int flow_node_order = Integer.parseInt(request.getParameter("flow_node_order").toString());
+
+		map.put("flow_audit_last_auditid",last_auditid);
+	
+		map.put("option",option);
+		map.put("auditID",auditID);
+	    map.put("where", "flow_audit_table");
+	    flowService.backBill(map);
+		if ((flow_node_order - 1) == 1) {
+			map.put("filds","status="+2);
+			map.put("billID",billID);
+            supplierDao.updateStatus(map);
+
+		}
+
+	}
+	
+
+	
+	// 循环所有分类插入
+	@Override
+	@Transactional
+	public Map<String, Object> toMaterialPrice() {
+		String seriesID="";
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
+		try {
+			
+		List<Map<String, Object>> dataList = new ArrayList<Map<String, Object>>();
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("fields", "*");
+		map.put("where", "construct_material_series");
+		dataList = materialDao.selectData(map);
+
+		for (int i = 0; i < dataList.size(); i++) {
+			Map<String, Object> data = dataList.get(i);
+			String seriesSuppliers = data.get(
+					"construct_material_seriesSuppliers").toString();
+			String[] supplierIds = seriesSuppliers.split(",");
+			
+			 seriesID = data.get("construct_material_seriesID")
+					.toString();
+			
+			List<Map<String, Object>> materialData = new ArrayList<Map<String, Object>>();
+			map.put("fields", " model.construct_material_model_id,model.construct_material_model_unit,model.construct_material_model_name,material.construct_material_name ");
+			map.put("where", "construct_material_model model "
+					+ " LEFT JOIN construct_material_table material on model.construct_material_model_parentid =material.construct_material_id  "
+					+ " LEFT JOIN construct_material_series series on material.construct_material_seriesId=series.construct_material_seriesID "
+					+ " where series.construct_material_seriesID="+seriesID+" ");
+			materialData = materialDao.selectData(map);
+			
+			
+			for (int j = 0; j < supplierIds.length; j++) {
+				int construct_material_supplierId = Integer.valueOf(supplierIds[j].toString());
+				map.clear();
+				map.put("table", "construct_material_price");
+				for (int k = 0; k < materialData.size(); k++) {
+					Map<String, Object> materialMap = materialData.get(k);
+					
+					map.put("fieds", "("+construct_material_supplierId+","+materialMap.get("construct_material_model_id")+","
+							+ "'"+materialMap.get("construct_material_model_unit")+"','"+materialMap.get("construct_material_model_name")+"','"
+									+ ""+materialMap.get("construct_material_name")+"')");
+					materialDao.insertData(map);
+				}
+			}
+		}
+	} catch (Exception e) {
+		System.out.println("错误是"+e+"类别是"+seriesID);
+		jsonMap.put("msg", "操作失败,错误是"+e+"类别是"+seriesID);
+	}
+		return jsonMap;
+	}
+
+}

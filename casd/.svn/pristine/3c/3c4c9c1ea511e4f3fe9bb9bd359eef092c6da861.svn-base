@@ -1,0 +1,233 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="PowerCheck" prefix="shop"%>
+
+<html>
+<head>
+<title>首页</title>
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+</head>
+<body class="easyui-layout" style="overflow-y: hidden;" scroll="no">
+	<div id="main" region="center"
+		style="background: #eee; padding: 5px; overflow-y: hidden;">
+
+
+		<div class="easyui-layout" fit="true">
+			<div region="north" split="false" border="false"
+				style="overflow: hidden; padding: 5px 5px 28px 5px;">
+				<div class="easyui-panel" title="查询条件" style="margin-bottom: 5px;">
+					<div class="search">
+						<ul>
+							<li><label>流程名称：</label><input type="text" name="flow_name"
+								class="easyui-validatebox" style="width: 120px" /></li>
+							<li>&nbsp;&nbsp; <a class="easyui-linkbutton"
+								data-options="iconCls:'icon-search'" href="javascript:;"
+								id="btnSearch">查询</a></li>
+								
+							<%-- <shop:permission code="ADD_FLOW"> --%>
+							<li>&nbsp;&nbsp; <a href="#" class="easyui-linkbutton"
+								iconCls="icon-cancel" plain="true" onclick="btnDele();">删除流程</a></li>
+							<li>&nbsp;&nbsp; <a href="#" class="easyui-linkbutton"
+								iconCls="icon-add" plain="true" onclick="addFlow();">新增流程</a></li>
+							<li>&nbsp;&nbsp; <a href="#" class="easyui-linkbutton"
+								iconCls="icon-edit" plain="true" onclick="editFlow();">编辑流程</a></li>
+							<%-- </shop:permission>	 --%>
+						</ul>
+						<div class="clear"></div>
+					</div>
+				</div>
+			</div>
+
+			<div region="center" split="false" border="false"
+				style="overflow: hidden; padding: 0 5px 5px 5px" id="dataList">
+				<table id="data" title="" fit="true"
+					data-options="collapsible: true,pagination:true,rownumbers:true">
+					<thead>
+						<tr>
+							<th id="ds" halign="center" field="flow_id" align="center"
+								sortable="true" width="60px">流程编号</th>
+							<th halign="center" field="flow_name" align="center"
+								sortable="true" width="120px">流程名称</th>
+							<th halign="center" field="flow_description" align="center"
+								sortable="true" width="120px">流程描述</th>
+							<th halign="center" field="psn" align="center" sortable="true"
+								width="120px" formatter="operate_formatter">操作</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+
+		</div>
+	</div>
+
+	<div id="w" class="easyui-window" title='修改信息'
+		data-options="modal:true,closed:true,iconCls:'icon-save'"
+		style="width:400px;height:300px;padding:10px;">
+		<form id="form1" method="post">
+
+			<div style="margin:10px 0;">
+				<table>
+					<tr>
+						<td>流程编号：</td>
+						<td><input type="text" name="flow_id" id="flow_id" value="0"
+							readonly="readonly" /></td>
+					</tr>
+					<tr>
+						<td>流程名称：</td>
+						<td><input type="text" name="flow_name" id="flow_name" /></td>
+					</tr>
+					<tr>
+						<td>流程描述：</td>
+						<td><input type="text" name="flow_description"
+							id="flow_description" /></td>
+					</tr>
+				</table>
+			</div>
+
+		</form>
+		<br /> <br /> <br />
+		<div style="text-align:center">
+
+			<a class="easyui-linkbutton" href="javascript:;" id="btnSave"
+				onclick="btnSaveEva()">提交</a> &nbsp;&nbsp;&nbsp;&nbsp; <a
+				class="easyui-linkbutton" href="javascript:;" id="btnCancel"
+				onclick="$('#w').window('close');">取消</a>
+
+		</div>
+
+
+
+	</div>
+
+	</div>
+
+
+
+	<script type="text/javascript">
+		function operate_formatter(value, row, index) {
+			var html = "";
+		
+			html += '<a href="javascript:;" class="opt"  data-options="iconCls:\'icon-cut\',plain:true"  cmd="edit" i="' + index + '">编辑</a>';
+          
+			return html;
+		}
+
+		function dateformat(value, row, index) {
+			if (value == undefined)
+				return "";
+			var date = new Date(value);
+			var pattern = "yyyy-MM-dd hh:mm:ss";
+			return date.format(pattern);
+		}
+
+		function status_formatter(value, row, index) {
+			if (value == 1) {
+				return "启用";
+			} else if (value == 2) {
+				return "禁用";
+
+			}
+		}
+
+		function addFlow() {
+			$("#w").window("open");
+
+		}
+		/**
+		* 打开子窗口赋值
+		*/
+		function editFlow() {
+			var row = $('#data').datagrid('getSelected');
+			if (row) {
+				$("#w").window("open");
+				$("#flow_id").val(row.flow_id);
+				$("#flow_name").val(row.flow_name);
+				$("#flow_description").val(row.flow_description);
+			}else{
+				$.messager.alert("提示","请选择要编辑行！");
+			}
+
+		}
+		function btnSaveEva() {
+			$.post("saveFlow.do", $("#form1").serialize(), function(data) {
+				if (data.msg != undefined) {
+					$.messager.alert("提示", data.msg, "error");
+				} else {
+					$.messager.alert("提示","操作成功！" ,"info",function(){
+				        window.location.reload();
+				    });
+					
+				}
+
+			});
+
+		}
+		/***处理操作列的功能***/
+		function cmdHanlder(cmd, row) {
+			if (cmd == "edit") {
+
+				location.href = "flowNew.do?" + $.param({
+					'flow_id' : row.flow_id, //获取id
+				});
+
+			}
+		}
+
+		//批量删除处理
+		function btnDele() {
+			var rows = $("#data").datagrid("getSelections");//获取表格数据
+			if (rows.length == 0) {
+				$.messager.alert("提示","请选择要删除行！");
+				return false;
+			}
+
+			var ids = [];
+			for (var i = 0; i < rows.length; i++) {
+				ids.push(rows[i].flow_id);
+			}
+			$.messager.confirm('提示！', '你确定删除吗？', function(r) {
+				if (r) {
+					$.ajax({
+						type : 'POST',
+						url : 'deleFlow.do',
+						traditional : true,
+						data : {
+							'flowids' : JSON.stringify(ids)
+						},
+						success : function(data) {
+							if (data.msg != undefined) {
+								$.messager.alert("提示", data.msg, "error");
+							} else {
+								$.messager.alert("操作成功!");
+								location.reload();
+							}
+
+						}
+					});
+				}
+			});
+		};
+
+		$(function() {
+			$("#data").admin_grid({
+				queryBtn : "#btnSearch",
+				excelBtn : "#btnExcel",
+				cmdHanlder : cmdHanlder,
+
+			});
+
+		});
+	</script>
+
+</body>
+</html>

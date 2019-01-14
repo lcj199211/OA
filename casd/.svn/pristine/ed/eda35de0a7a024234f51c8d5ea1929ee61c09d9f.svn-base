@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.manage.ContractDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+    <insert id="saveContract" useGeneratedKeys="true" keyProperty="manage_contract_id" parameterType="com.casd.entity.manage.Contract">
+   		
+   		INSERT INTO manage_contract  (manage_contract_id,manage_contract_name,manage_contract_company,manage_contract_firstParty,
+   		manage_contract_amount,manage_contract_address,manage_contract_startTime,manage_contract_endTime,manage_contract_visaAmount,
+   		manage_contract_remark,manage_contract_num) 
+        VALUES (#{manage_contract_id},#{manage_contract_name},#{manage_contract_company},#{manage_contract_firstParty},
+        #{manage_contract_amount},#{manage_contract_address},#{manage_contract_startTime},#{manage_contract_endTime}
+        ,#{manage_contract_visaAmount},#{manage_contract_remark},#{manage_contract_num})
+   		on duplicate key update manage_contract_id=#{manage_contract_id},manage_contract_name=#{manage_contract_name},
+	    						manage_contract_company=#{manage_contract_company},manage_contract_firstParty=#{manage_contract_firstParty},
+	    						manage_contract_amount=#{manage_contract_amount},manage_contract_address=#{manage_contract_address},
+	    						manage_contract_startTime=#{manage_contract_startTime},manage_contract_endTime=#{manage_contract_endTime},
+	    						manage_contract_visaAmount=#{manage_contract_visaAmount},manage_contract_remark=#{manage_contract_remark},
+	    						manage_contract_num=#{manage_contract_num}
+   </insert>
+   
+   <insert id="saveReqfunds"  parameterType="com.casd.entity.manage.Reqfunds">
+   		
+   		INSERT INTO manage_reqfunds  (manage_reqfunds_id,manage_reqfunds_contractId,manage_reqfunds_time,manage_reqfunds_amount,
+   		manage_reqfunds_ticketDate,manage_reqfunds_ticketAmount,manage_reqfunds_receiveDate,
+   		manage_reqfunds_receiveAmount,manage_reqfunds_remark,manage_first_party,manage_ticket_content) 
+        VALUES (#{manage_reqfunds_id},#{manage_reqfunds_contractId},#{manage_reqfunds_time},#{manage_reqfunds_amount},
+        #{manage_reqfunds_ticketDate},#{manage_reqfunds_ticketAmount},#{manage_reqfunds_receiveDate},
+        #{manage_reqfunds_receiveAmount},#{manage_reqfunds_remark},#{manage_first_party},#{manage_ticket_content})
+   		on duplicate key update manage_reqfunds_id=#{manage_reqfunds_id},manage_reqfunds_contractId=#{manage_reqfunds_contractId},
+	    						manage_reqfunds_time=#{manage_reqfunds_time},manage_reqfunds_amount=#{manage_reqfunds_amount},
+	    						manage_reqfunds_ticketDate=#{manage_reqfunds_ticketDate},manage_reqfunds_ticketAmount=#{manage_reqfunds_ticketAmount},
+	    						manage_reqfunds_receiveDate=#{manage_reqfunds_receiveDate},manage_reqfunds_receiveAmount=#{manage_reqfunds_receiveAmount},
+	    						manage_reqfunds_remark=#{manage_reqfunds_remark}
+   </insert>
+   
+    <select id="getContract" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+    
+    
+    <select id="getReqfunds" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+   <select id="getSum" parameterType="map" resultType="String">
+        select ${fields} from ${where} 
+    </select>
+   
+   
+   <delete id="delete_Contract" parameterType="map">
+		DELETE manage_reqfunds,manage_contract from ${what}
+	</delete>
+   
+    <delete id="delete_Reqfunds" parameterType="map">
+		DELETE from manage_reqfunds where manage_reqfunds_id= ${id} 
+	</delete>
+	<!-- 更新收款进度 -->
+	<update id="updateReqfunds" parameterType="com.casd.entity.manage.Reqfunds">
+	 update manage_reqfunds 
+        <set>
+        	<if test="manage_reqfunds_contractId!=0">
+         		`manage_reqfunds_contractId`=#{manage_reqfunds_contractId},
+         	</if>
+         	<if test="manage_reqfunds_time!=null">
+         		manage_reqfunds_time=#{manage_reqfunds_time},
+         	</if>
+         	<if test="manage_reqfunds_amount!=null">
+         		manage_reqfunds_amount=#{manage_reqfunds_amount},
+         	</if>
+         	<if test="manage_reqfunds_ticketDate!=null">
+         		manage_reqfunds_ticketDate=#{manage_reqfunds_ticketDate},
+         	</if>
+         	<if test="manage_reqfunds_ticketAmount!=null">
+         		manage_reqfunds_ticketAmount=#{manage_reqfunds_ticketAmount},
+         	</if>
+         	<if test="manage_reqfunds_receiveDate!=null">
+         		manage_reqfunds_receiveDate=#{manage_reqfunds_receiveDate},
+         	</if>
+         	<if test="manage_reqfunds_receiveAmount!=null">
+         		manage_reqfunds_receiveAmount=#{manage_reqfunds_receiveAmount},
+         	</if>
+         	<if test="manage_reqfunds_remark!=null">
+         		manage_reqfunds_remark=#{manage_reqfunds_remark},
+         	</if>
+         	<if test="manage_first_party!=null">
+         		manage_first_party=#{manage_first_party},
+         	</if>
+         	<if test="manage_ticket_content!=null">
+         		manage_ticket_content=#{manage_ticket_content},
+         	</if>
+         	<if test="manage_telephone!=null">
+         		manage_telephone=#{manage_telephone},
+         	</if>
+         	<if test="manage_pay_taxes!=0">
+         		manage_pay_taxes=#{manage_pay_taxes},
+         	</if>
+         	<if test="manage_vat_category!=0">
+         		manage_vat_category=#{manage_vat_category},
+         	</if>
+         	<if test="manage_company_address!=null">
+         		manage_company_address=#{manage_company_address},
+         	</if>
+         	<if test="manage_opening_bank!=null">
+         		manage_opening_bank=#{manage_opening_bank},
+         	</if>
+         	<if test="manage_bank_account!=null">
+         		manage_bank_account=#{manage_bank_account},
+         	</if>
+         	<if test="manage_status!=0">
+         		manage_status=#{manage_status},
+         	</if>
+         <if test="manage_department!=null">
+         		manage_department=#{manage_department}
+         	</if>	
+
+        </set>
+        where manage_reqfunds_id=#{manage_reqfunds_id}
+	
+	</update>
+   
+</mapper>

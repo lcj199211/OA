@@ -1,0 +1,188 @@
+package com.casd.serviceimpl.construct;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.construct.APartyDao;
+import com.casd.entity.construct.ApartyMaterial;
+import com.casd.entity.construct.ApartyPur;
+import com.casd.entity.construct.ApartyPurEntry;
+import com.casd.entity.hr.Hregister;
+import com.casd.service.construct.APartyService;
+
+@Service
+public class ApartyServiceImpl implements APartyService {
+	
+	
+	@Autowired
+	private APartyDao apartyDao;
+
+	@Override
+	public List<Map<String, Object>> getList(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			int count = apartyDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return apartyDao.getList(param);
+	}
+
+	@Override
+	public Map<String, List<Map<String, Object>>> constructNew(
+			int construct_Aparty_purchase_id) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", "*");
+		param.put("where", " construct_aparty_purchase  apa left join construct_project_table pro  on apa.construct_Aparty_purchase_constructId=pro.construct_project_id  where construct_Aparty_purchase_id="+construct_Aparty_purchase_id+" ");
+		List<Map<String, Object>> headData =apartyDao.getData(param);
+		param.clear();
+		param.put("fields", "*");
+		param.put("where", " construct_aparty_purentry entry left join construct_aparty_material mat on entry.construct_Aparty_purEntry_materialId=mat.construct_Aparty_material_id  where construct_Aparty_purEntry_parentId="+construct_Aparty_purchase_id+" ");
+		List<Map<String, Object>> entryData =apartyDao.getData(param);
+		Map<String, List<Map<String, Object>>> data=new HashMap<String, List<Map<String,Object>>>();
+		data.put("aParty", headData);
+		data.put("entries", entryData);
+		return data;
+	}
+
+	@Override
+	public void save_aPartyMaterial(ApartyMaterial apartyMaterial) {
+		// TODO Auto-generated method stub
+		
+		apartyDao.save_aPartyMaterial(apartyMaterial);
+		
+	}
+
+	@Override
+	public void delete_aPartyMaterial(String where) {
+		// TODO Auto-generated method stub
+		
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		apartyDao.delete_aPartyMaterial(map);
+		
+	}
+
+	@Override
+	@Transactional
+	public void cp_aParty_exl(List<List<Object>> list,
+			String construct_project_id) {
+		int emptyNum=0;
+		for (int i = 1; i < list.size(); i++) {
+			List<Object> eobj = list.get(i);
+			if(!eobj.get(4).toString().trim().equals("")){
+				emptyNum=0;
+				ApartyMaterial apartyMaterial=new ApartyMaterial();
+				apartyMaterial.setConstruct_Aparty_material_id(0);
+				apartyMaterial.setConstruct_Aparty_material_constructId(Integer.valueOf(construct_project_id));
+				apartyMaterial.setConstruct_Aparty_material_category(eobj.get(4).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_model(eobj.get(1).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_name(eobj.get(0).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_num(Double.valueOf(eobj.get(3).toString().trim().equals("")?"0.00":eobj.get(3).toString().trim()));
+				apartyMaterial.setConstruct_Aparty_material_remark(eobj.get(5).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_unit(eobj.get(2).toString().trim());
+				apartyDao.save_aPartyMaterial(apartyMaterial);
+			}else {
+				if (emptyNum==5) {
+					break;
+				}else {
+					emptyNum=emptyNum+1;
+				}
+			}
+		}
+		
+	}
+
+	@Override
+	public Map<String, Object> getConstruct(Integer construct_project_id) {
+		// TODO Auto-generated method stub
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", "*");
+		param.put("where", " construct_project_table where construct_project_id="+construct_project_id+" ");
+		List<Map<String, Object>> proData =apartyDao.getData(param);
+		return proData.get(0);
+	}
+
+	@Override
+	@Transactional
+	public int save_aPartyPur(ApartyPur apartyPur, String rows) {
+		// TODO Auto-generated method stub
+		int construct_Aparty_purchase_id = apartyPur.getConstruct_Aparty_purchase_id();
+		if (construct_Aparty_purchase_id==0) {
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			apartyPur.setConstruct_Aparty_purchase_creatTime(df.format(new Date()).toString());
+			apartyDao.save_aPartyPurHead(apartyPur);
+			construct_Aparty_purchase_id = apartyPur.getConstruct_Aparty_purchase_id();
+			
+			//启动流程
+			
+			
+		}else {
+			apartyDao.save_aPartyPurHead(apartyPur);
+		}
+		JSONArray myJsonArray = JSONArray.fromObject(rows);
+		for (int i = 0; i < myJsonArray.size(); i++) {
+			ApartyPurEntry apartyPurEntry = new ApartyPurEntry();
+			JSONObject myjObject = myJsonArray.getJSONObject(i);
+			apartyPurEntry.setConstruct_Aparty_purEntry_id(Integer.valueOf(myjObject.get("construct_Aparty_purEntry_id").toString().isEmpty() ? String
+					.valueOf("0") : myjObject.getString("construct_Aparty_purEntry_id").toString()));
+			apartyPurEntry.setConstruct_Aparty_purEntry_materialId(Integer.valueOf(myjObject.get("construct_Aparty_purEntry_materialId").toString()));
+			apartyPurEntry.setConstruct_Aparty_purEntry_num(Double.valueOf(myjObject.get("construct_Aparty_purEntry_num").toString().isEmpty() ? String
+					.valueOf("0.00") : myjObject.getString("construct_Aparty_purEntry_num").toString()));
+			apartyPurEntry.setConstruct_aParty_byedNum(Double.valueOf(myjObject.get("construct_aParty_byedNum").toString().isEmpty() ? String
+					.valueOf("0.00") : myjObject.getString("construct_aParty_byedNum").toString()));
+			apartyPurEntry.setConstruct_Aparty_purEntry_parentId(construct_Aparty_purchase_id);
+			apartyPurEntry.setConstruct_Aparty_purEntry_remark(myjObject.get("construct_Aparty_purEntry_remark").toString());
+			apartyDao.save_aPartyPurEntry(apartyPurEntry);
+		}
+		return construct_Aparty_purchase_id;
+	}
+
+	@Override
+	@Transactional
+	public void dele_apartyPur(String id) {
+		// TODO Auto-generated method stub
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" where construct_Aparty_purchase_id = "+id);
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", sbf);
+		apartyDao.dele_apartyPur(map);
+		
+		sbf.delete(0, sbf.length());
+		sbf.append(" where construct_Aparty_purEntry_parentId = "+id);
+		delete_aPartyEntry(sbf.toString());
+	}
+
+	@Override
+	public void delete_aPartyEntry(String where) {
+		// TODO Auto-generated method stub
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		apartyDao.delete_aPartyEntry(map);
+	}
+
+}

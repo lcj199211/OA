@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.tree.MenuDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+    <select id="queryMenuList" parameterType="map" resultType="com.casd.entity.tree.Menu">
+        select ${what} from ${where}
+    </select>
+    
+    <select id="findMenu" parameterType="map" resultType="String">
+        select ${what} from ${where}
+    </select>
+    
+    <select id="getmenuCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    
+    <select id="menuList" parameterType="map" resultType="map">
+        select * from ${where} ${limit} 
+    </select>
+    
+    <select id="addMenu" parameterType="com.casd.entity.tree.Menu" >
+        INSERT INTO uc_menu  (id,menu_name,parent_id,menu_url,`order`,ismenu,program_code) 
+        VALUES (#{id},#{menu_name},#{parent_id},#{menu_url},#{order},#{ismenu},#{program_code})
+    </select>
+    
+    <select id="deleMenu" parameterType="map" >
+        DELETE FROM ${where} WHERE id IN (${what})  
+    </select>
+    
+    <select id="findById" parameterType="map" resultType="com.casd.entity.tree.Menu">
+        select * FROM ${where} WHERE id IN (${what})  
+    </select>
+    
+    <select id="updateMenu" parameterType="com.casd.entity.tree.Menu" >
+        update uc_menu 
+        <set>
+        	<if test="menu_url!=null">
+         		menu_url=#{menu_url},
+         	</if>
+         	<if test="menu_name!=null">
+         		menu_name=#{menu_name},
+         	</if>
+         	<if test="parent_id!=null">
+         		parent_id=#{parent_id},
+         	</if>
+         	<if test="order!=null">
+         		`order`=#{order},
+         	</if>
+         	<if test="ismenu!=null">
+         		ismenu=#{ismenu},
+         	</if>
+         	<if test="program_code!=null">
+         		program_code=#{program_code}
+         	</if>
+        </set>
+        where id=#{id}
+    </select>
+    
+    
+    
+    
+     <select id="queryListForRang" resultType="map"
+	parameterType="map">
+
+	SELECT * FROM ${where}
+		
+   </select>  
+</mapper>

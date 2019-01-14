@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.hr.HrContractDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+     <insert id="insertContract" parameterType="com.casd.entity.hr.HrContract">        
+              INSERT into hr_contract(pact_id,start_time,out_stime,remark,user_id)
+               VALUES (#{pact_id},#{start_time},#{out_stime},#{remark},#{user_id})
+               
+                 on duplicate key update pact_id=#{pact_id},start_time=#{start_time},out_stime=#{out_stime},
+                 remark=#{remark},user_id=#{user_id}
+                 
+     </insert>
+    
+    <select id="selectgetAll" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+    <delete id="deleteContract" parameterType="map">
+        DELETE FROM hr_contract ${where}
+    </delete>
+    
+     <insert id="insertBecome" parameterType="com.casd.entity.hr.Become" useGeneratedKeys="true" keyProperty="bc_id">  
+     	insert into uc_become(bc_id,user_id,username,role_name,bc_status,on_trial,incorporation_date,close_time,bc_personal,bc_department) 
+		values (#{bc_id},#{user_id},#{username},#{role_name},#{bc_status},#{on_trial},#{incorporation_date},#{close_time},#{bc_personal},#{bc_department})              
+     </insert>
+     
+      <update id="updateBecome"> 
+     	update uc_become SET ${pars} ${where}    
+     </update>
+    
+     
+     
+    
+</mapper>

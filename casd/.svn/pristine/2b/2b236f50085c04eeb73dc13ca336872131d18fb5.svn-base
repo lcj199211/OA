@@ -1,0 +1,222 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>首页</title>
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+<style>
+#div_leftmenu div {
+	font-size: 15px;
+}
+
+#div_leftmenu div ul {
+	margin: 10px 10px 10px 10px;
+	padding: 0;
+	overflow: hidden;
+	line-height: 40px;
+}
+
+#div_leftmenu div ul li {
+	list-style-type: none;
+	background-color: #DFE2E3;
+	text-align: center;
+	margin-bottom: 2px;
+}
+
+#div_leftmenu div ul li:last-of-type {
+	margin-bottom: 0;
+}
+
+ table tr td input{
+      width: 250px;
+      height: 30px
+ }
+</style>
+
+</head>
+<body class="easyui-layout" style="overflow-y: hidden;" scroll="no">
+	<form id="form1" method="post">
+	<input type="hidden" name="userid" value="${pro.userid}"/>
+		<div id="main" region="center"
+			style="background: #eee; padding: 5px; overflow-y: hidden;">
+
+	
+				<div class="easyui-layout" fit="true">
+	
+			<div region="north" title="用户基本信息" style="padding: 10px;"
+				minHeight="350px">
+				<table width="90%" class="content">
+			
+					<tr>
+						<td>用户名:</td>
+						<td><input class="easyui-validatebox" type="text"
+							data-options="required:true" name="username" id="username"
+							value="${pro.username}" style="width: 150px" /></td>
+						<td>密码:</td>
+						<td><input class="easyui-validatebox" type="text"
+							data-options="required:true" name="password" id="password" value="${pro.password}" style="width: 150px" ></td>
+					</tr>
+				
+					<tr style="display: none">
+						<td>电话:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="phone_number" id="phone_number" value="${pro.phone_number}"
+							style="width: 150px" /></td>
+						<td>邮箱:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="email" id="email" value="${pro.email}"
+							style="width: 150px" data-options="validType:'email'" /></td>
+					</tr>
+					
+						<tr style="display: none">
+						<td style="display: none">性别:</td>
+						<td style="display: none">男<input class="easyui-validatebox" type="radio" checked="checked"
+							name="sex"  value="1"
+							style="width: 30px"/>
+						女<input class="easyui-validatebox" type="radio" 
+							name="sex"  value="2" 
+							style="width: 30px"/>
+							</td>
+						<td>身份证号码:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="user_card" value="${pro.user_card}" id="user_card"
+							style="width: 150px" data-options="validType:'email'" /></td>
+					</tr>
+					<tr style="display: none">
+				  <td style="display: none">角色权限编号:</td>
+						<td style="display: none" colspan="3"><input class="easyui-validatebox" type="text"
+							name="role_id" id="role_id" value="${pro.role_id}" style="width: 150px" /></td>
+					</tr>
+					<tr style="display: none">
+						<td >证件详细地址:</td>
+						<td colspan="3"><input class="easyui-validatebox" type="text"
+							name="card_address" id="card_address" value="${pro.card_address}"
+							style="width: 400px" /></td>
+					</tr>
+					
+				
+
+				</table>
+					<br /> <br /> <br />
+					<div region="center" style="padding: 10px; text-align: center;"
+				border="false">
+				<a class="easyui-linkbutton"
+					data-options="iconCls:'icon-system_save'" href="javascript:;"
+					id="btnSave">保存</a>  <!-- <a class="easyui-linkbutton"
+					data-options="iconCls:'icon-system_close'" href="javascript:;"
+					id="btnCancel">取消</a> -->
+			</div>
+			</div>
+		
+				</div>
+
+			</div>
+	</form>
+			
+	
+
+
+
+
+	<script type="text/javascript">
+	
+		
+
+		function dateformat(value, row, index) {
+			if (value == undefined)
+				return "";
+			var date = new Date(value);
+			var pattern = "yyyy-MM-dd hh:mm:ss";
+			return date.format(pattern);
+		}
+
+		
+
+	
+
+	
+		
+		
+		function formSub() {
+		var sex=null;
+	    var userid = $("input:hidden[name='userid']").val();
+	    var username=$("#username").val();
+	    var password=$("#password").val();
+	    var phone_number=$("#phone_number").val();
+	    var email=$("#email").val();
+	    var  role_id=$("#role_id").val();
+	    var user_card=$("#user_card").val();
+	    var card_address=$("#card_address").val();
+	  sex=  $('input:radio[name="sex"]:checked').val(); 
+	    if(sex=="男"){
+	      var sex=1;
+	      }else{
+	      var sex=2;
+	      
+	    }
+	    if(password.length<3){
+	    	
+	    	$.messager.alert("提示", "密码长度不能小于3位");
+	    	return false;
+	    }
+	    
+		 $.ajax({
+		         url : "editUser.do",
+	 	         type : "post",
+		         data:{'username':username,
+		               'password':password,
+		               'phone_number':phone_number,
+		               'email':email,
+		               'user_card':user_card,
+		               'card_address':card_address,
+		               'sex':sex,
+		               'role_id':role_id,
+		               'userid':userid
+
+		},
+		
+		success : function(data) {
+			if(data.Success){
+				
+				$.messager.alert("提示", data.Success, "info",function() {
+				
+				   window.location.href="userList.do";});
+			}else {
+				$.messager.alert("提示", data.Msg, "error");
+			         }
+                  }
+				});
+		    
+		
+	}
+
+	 /*   function asr(){
+	 
+	   alert(sds);
+	   
+	   
+	   } */
+
+  $(function() {
+		$("#btnSave").click(function() {
+			formSub();
+		});
+	
+
+
+	});
+	</script>
+
+</body>
+</html>

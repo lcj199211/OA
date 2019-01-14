@@ -1,0 +1,366 @@
+package com.casd.controller.construct;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import net.sf.json.JSONObject;
+
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.construct.Construct;
+import com.casd.entity.construct.ConstructDep;
+import com.casd.entity.uc.User;
+import com.casd.service.construct.ConstructService;
+import com.casd.service.uc.UserService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class ConstructController {
+
+	@Autowired
+	private ConstructService constructService;
+	@Autowired
+	private UserService userService;
+
+	private int  projectDep=0;
+	
+		
+	
+	/**
+	 * 项目部list
+	 */
+	@RequestMapping(value = "/projectDepList", method = RequestMethod.GET)
+	public ModelAndView projectDepList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("construct/constructDepList");
+		return mv;
+	}
+
+	@RequestMapping(value = "/projectDepList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> projectDepList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+
+		sbf.append(" construct_project_dep where 1=1 ");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = constructService.constructDepList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+	}
+
+	/**
+	 * 项目list
+	 */
+	@RequestMapping(value = "/constructList", method = RequestMethod.GET)
+	public ModelAndView constructList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		if(!request.getParameter("constuct_project_dep_id").isEmpty()){   //当返回list界面时是空的，用上一个
+			String dep_id = request.getParameter("constuct_project_dep_id");
+			projectDep=Integer.valueOf(dep_id);
+		}
+		
+		// 获取用户
+		User loginUser = (User) request.getSession().getAttribute("loginUser");
+		String userId = String.valueOf(loginUser.getUserid());
+
+		Map<String, Object> params = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		String fields = "a.constuct_project_dep_list";
+		sbf.append(" construct_project_dep a");
+		sbf.append(" WHERE a.constuct_project_dep_id =" + projectDep);
+
+		params.put("where", sbf.toString());
+		params.put("fields", fields);
+		params.put("userId", userId);
+
+		Boolean isExist = constructService.isExist(params);
+
+		// 判断是否有权限入
+		if (isExist) {
+			mv.setViewName("construct/constructList");
+		} else {
+			mv.setViewName("common/noAuthority");
+		}
+		return mv;
+	}
+
+	@RequestMapping(value = "/constructList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> constructList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		/*int constuct_project_dep_id = Integer.valueOf(request
+				.getParameter("constuct_project_dep_id"));*/
+		sbf.append(" construct_project_table where 1=1 and construct_project_dep="
+				+ projectDep + "");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+
+	/**
+	 * 项目新增,修改
+	 */
+
+	@RequestMapping(value = "/constructNew", method = RequestMethod.GET)
+	@ResponseBody
+	public ModelAndView constructNew(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		ModelAndView mv = new ModelAndView();
+		Construct construct=new Construct();
+		
+		if(StringUtils.hasText(request.getParameter("construct_project_id"))){
+			Map<String, Object> map=new HashMap<String, Object>();
+			int construct_project_id=Integer.valueOf(request.getParameter("construct_project_id").toString());
+			StringBuffer sbf = new StringBuffer();
+			sbf.append(" construct_project_table where 1=1 and construct_project_id="
+					+ construct_project_id + "");
+			String fields="*";
+			map.put("where", sbf);
+			map.put("fields", fields);
+			construct = constructService.getConstructById(map);
+		}else{
+			construct.setConstruct_project_id(0);
+			construct.setConstruct_project_dep(projectDep);
+		}
+		
+		mv.addObject("construct", construct);
+		mv.setViewName("construct/constructNew");
+		
+		return mv;
+	}
+
+	
+	@RequestMapping(value = "/constructView", method = RequestMethod.GET)
+	@ResponseBody
+	public ModelAndView constructView(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		ModelAndView mv = new ModelAndView();
+		Construct construct=new Construct();
+		
+		if(StringUtils.hasText(request.getParameter("construct_project_id"))){
+			Map<String, Object> map=new HashMap<String, Object>();
+			int construct_project_id=Integer.valueOf(request.getParameter("construct_project_id").toString());
+			StringBuffer sbf = new StringBuffer();
+			sbf.append(" construct_project_table where 1=1 and construct_project_id="
+					+ construct_project_id + "");
+			String fields="*";
+			map.put("where", sbf);
+			map.put("fields", fields);
+			construct = constructService.getConstructById(map);
+		}
+		mv.addObject("construct", construct);
+		mv.setViewName("construct/constructView");
+		
+		return mv;
+	}
+	
+	
+	/**
+	 * 项目保存
+	 */
+
+	@RequestMapping(value = "/saveConstruct", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> saveConstruct(HttpServletRequest request,
+			Construct construct) throws Exception {
+		constructService.saveConstruct(construct);
+		return null;
+	}
+	
+	
+	/**
+	 * 项目作业列表
+	 */
+	@RequestMapping(value = "/taskList", method = RequestMethod.GET)
+	public ModelAndView taskList(HttpServletRequest request) {
+		String construct_project_id = request.getParameter(
+				"construct_project_id").toString();
+		HttpSession session = request.getSession();
+		session.setAttribute("projectId", construct_project_id);
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("construct/taskList");
+		return mv;
+	}
+
+	// 修改数据初始化
+	@RequestMapping(value = "/queryId_dep", method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, Object> queryId_dep(HttpServletRequest request,
+			Model model) throws Exception {
+
+		StringBuffer sbf = new StringBuffer();
+		String cid = request.getParameter("cid");
+		Map<String, Object> json = new HashMap<String, Object>();
+		sbf.append(" construct_project_dep  WHERE constuct_project_dep_id="
+				+ cid);
+		ConstructDep dep = constructService.findDepById(sbf.toString());
+
+		if (StringUtils.hasText(dep.getConstuct_project_dep_list())) {
+			String fields = " userid,username";
+			sbf.delete(0, sbf.length());
+			sbf.append(" uc_user where userid in("
+					+ dep.getConstuct_project_dep_list() + ")");
+			List<Map<String, Object>> listMap = userService.queryId(fields,
+					sbf.toString());
+			json.put("listMap", listMap);
+		}
+		json.put("dep", dep);
+		return json;
+	}
+
+	/**
+	 * 项目列表修改
+	 * */
+	@RequestMapping(value = "/updata_dep", method = RequestMethod.POST)
+	@ResponseBody
+	public JSONObject updata_dep(HttpServletRequest request, ConstructDep dep,
+			String rowData) throws Exception {
+
+		JSONObject json = new JSONObject();
+		try {
+			rowData = rowData.substring(1);
+			String[] ids = rowData.split("]");
+			dep.setConstuct_project_dep_list(ids[0]);
+			constructService.updatectDep(dep);
+		} catch (Exception e) {
+			json.put("msg", "操作有误!");
+			
+			e.printStackTrace();
+		}
+		return json;
+
+	}
+
+	// 项目部列表删除
+	@RequestMapping(value = "/delete_Dep", method = RequestMethod.POST)
+	@ResponseBody
+	public Object delete_Dep(HttpServletRequest request) {
+		Map<String, Object> json = new HashMap<String, Object>();
+		String dep_id = request.getParameter("dep_id");
+		
+		try {
+
+			StringBuffer sbf = new StringBuffer();
+			sbf.append(" where constuct_project_dep_id="+ dep_id);
+			constructService.delete_Dep(sbf.toString());
+
+		} catch (Exception e) {
+			json.put("msg", "删除失败!");  
+			e.printStackTrace();
+		}
+
+		return json;
+
+	}
+
+	//删除
+	@RequestMapping(value="/delePro" , method = RequestMethod.POST)
+	@ResponseBody
+	public String delePro(HttpServletRequest request, Model model) {
+		Map<String, Object> map=new HashMap<String, Object>();
+		String ids =request.getParameter("ids");
+		ids=ids.substring(1);
+		String[] id=ids.split("]");
+		map.put("what",id[0]);        
+	    map.put("where", "construct_project_table");
+	    constructService.delePro(map);
+		return null;
+	}
+
+
+	/* @RequestMapping(value="/mytest" , method = RequestMethod.GET)
+	 public  ModelAndView mytest(){
+		 ModelAndView mView=new ModelAndView();
+		 mView.setViewName("test");
+		return mView;
+		 
+	 }
+	 
+	 @RequestMapping(value="/mytest" , method = RequestMethod.POST)
+	 @ResponseBody
+	public  Object mytest(HttpServletRequest request,File pic_path) throws IOException {
+			Map<String, Object> json = new HashMap<String, Object>();
+			String rootPath = request.getContextPath();
+			String realpath = request.getServletContext().getRealPath("");
+			List<List<Object>> list = new ArrayList<List<Object>>();
+			ImportExcel ie = new ImportExcel();
+			String url = request.getParameter("filUrl");
+			if(StringUtils.isEmpty(url)){
+				json.put("Success", false);
+				json.put("Msg", "请选择要导入的文件");
+				return json;
+			}
+
+			if (url.startsWith(rootPath)) {
+				url = url.substring(rootPath.length());
+			}
+			
+			if(!url.substring(url.lastIndexOf(".")).equals(".xlsx")){
+				json.put("Success", false);
+				json.put("Msg", "请选择Excel2007以上版本文件.xlsx");
+				return json;
+			}
+			File file = new File(realpath + url);
+			list = ie.read2007Excel(file);
+			//读取完信息删除上传文件 
+		    // 判断文件存在,删除  
+		    if (file.exists()) {
+		       file.delete();
+		    }
+				return null;
+		  
+		
+	}
+	
+
+	 }*/
+	 
+
+	 
+}

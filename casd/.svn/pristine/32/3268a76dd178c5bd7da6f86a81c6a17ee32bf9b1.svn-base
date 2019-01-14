@@ -1,0 +1,73 @@
+package com.casd.serviceimpl.ownCenter;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.activiti.engine.TaskService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.ownCenter.SealDao;
+import com.casd.entity.ownCenter.Seal;
+import com.casd.service.ownCenter.SealService;
+
+
+@Service
+public class SealServiceImpl implements SealService {
+	@Autowired
+	private SealDao sealDao;
+	
+	
+
+	@Override
+	@Transactional
+	public List<Map<String, Object>> getData(Map<String, Object> map) {
+		
+		Map<String, Object> daoMap=new HashMap<String, Object>();
+		daoMap.put("fields", "*");
+		daoMap.put("where", " uc_company com left join  own_seal seal on com.company_id=seal.own_seal_company where own_seal_id="+map.get("own_seal_id")+"");
+		return sealDao.getData(daoMap);
+	}
+	
+	
+	@Transactional
+	public void save_seal(Seal seal) {
+		sealDao.save_seal(seal);
+	}
+
+
+
+	@Override
+	@Transactional
+	public void delete_data(Map<String, Object> map) {
+		 sealDao.delete_data(map);
+		
+	}
+
+
+
+	@Override
+	@Transactional
+	public List<Map<String, Object>> SealList(int page, int pageSize,
+			Ref<Integer> record, String fields, String where) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", fields);
+		param.put("where", where);
+
+		if (record != null) {
+			Integer count = sealDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return sealDao.getList(param);
+	}
+
+}

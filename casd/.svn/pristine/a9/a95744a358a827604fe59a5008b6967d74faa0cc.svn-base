@@ -1,0 +1,390 @@
+package com.casd.serviceimpl.finance;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.construct.PurchaseDao;
+import com.casd.dao.finance.SettleDao;
+import com.casd.entity.construct.PurchaseEntry;
+import com.casd.entity.construct.PurchaseEntryClass;
+import com.casd.entity.construct.PurchaseHead;
+import com.casd.entity.finance.Settle;
+import com.casd.entity.finance.SettlePay;
+import com.casd.entity.finance.SettlePur;
+import com.casd.service.finance.SettleService;
+import com.casd.service.flow.FlowService;
+
+@Service
+public class SettleServiceImpl implements SettleService {
+
+	@Autowired
+	private SettleDao settleDao;
+	@Autowired
+	private FlowService flowService;
+	@Autowired
+	private  PurchaseDao  purchaseDao;
+	
+	@Override
+	public List<Map<String, Object>> supplierList(int page, int pageSize,
+		Ref<Integer> record, String where, String fields) throws Exception {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("where", where);
+		param.put("fields", fields);
+
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+		
+		List<Map<String, Object>> supplierList = settleDao.supplierList(param);
+		
+		if (record != null) {
+			record.setValue(supplierList.size());
+		}
+		
+		List<Map<String, Object>> listMaps=new ArrayList<Map<String,Object>>();
+		for (int i = 0; i < supplierList.size(); i++) {
+			
+			Map<String, Object> map = supplierList.get(i);
+			Boolean isExiseProname=map.containsKey("finance_settlepay_id");
+			if(isExiseProname){
+				listMaps.add(map);
+				continue;
+			}
+			
+			Boolean isExiseProid=map.containsKey("construct_project_id");
+			
+			String construct_supplier_name=map.get("construct_supplier_name").toString();
+
+			StringBuffer sbf = new StringBuffer();
+			String field = " SUM(finance_settlepay_payed) ";
+			Map<String, Object> params = new HashMap<String, Object>();
+			String payed="";
+			int payedInt=0;
+			if(isExiseProid){
+				String construct_project_id=map.get("construct_project_id").toString();
+				sbf.append("finance_settlepay_table  where finance_settlepay_supplier='"+construct_supplier_name+"' and finance_settlepay_projectid='"+construct_project_id+"'");
+				params.put("where", sbf);
+				params.put("fields", field);
+				payed=settleDao.getPayedTotal(params);
+				payedInt=Integer.valueOf(payed==null?"0":payed);
+			}else{
+				sbf.append("finance_settlepay_table  where finance_settlepay_supplier='"+construct_supplier_name+"'");
+				params.put("where", sbf);
+				params.put("fields", field);
+				payed=settleDao.getPayedTotal(params);
+				payedInt=Integer.valueOf(payed==null?"0":payed);
+			}
+			map.put("payedTotal", payedInt);
+			listMaps.add(map);	
+		}
+		
+		
+		
+		
+		return listMaps;
+	}
+
+	@Override
+	public List<Map<String, Object>> purSelect(int page, int pageSize,
+			Ref<Integer> record, String where, String fields) throws Exception {
+
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("where", where);
+		param.put("fields", fields);
+
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+		List<Map<String, Object>> purList = settleDao.purSelect(param);
+		if (record != null) {
+			record.setValue(purList.size());
+		}
+		//sql判断是否存在
+		 return purList;
+	}
+
+	@Override
+	public String getProject(int projectId) {
+		Map<String, Object> map=new HashMap<String, Object>();
+		String filds="*";
+		StringBuffer sBuffer=new StringBuffer();
+		sBuffer.append("  construct_project_table where  construct_project_id= "+projectId);
+		map.put("where", sBuffer);
+		map.put("filds", filds);
+		Map<String, Object> project=new HashMap<String, Object>();
+		project=settleDao.getProject(map);
+		return project.get("construct_project_name").toString();
+	}
+
+	@Override
+	@Transactional
+	public int saveSettlePay(Settle settle, String purRows) {
+		JSONArray  purRowsArray= JSONArray.fromObject(purRows);
+		//List<SettlePur> settlePurs=new ArrayList<SettlePur>();
+		
+		int settleId = settle.getFinance_settlepay_id();
+		if(settleId==0){
+			settleDao.saveSettle(settle);
+			settleId = settle.getFinance_settlepay_id();
+		}else {
+			settleDao.saveSettle(settle);
+		}
+		
+		for (int i = 0; i < purRowsArray.size(); i++) {
+			JSONObject purEntry = purRowsArray.getJSONObject(i);
+			SettlePur settlePur = (SettlePur) JSONObject.toBean(purEntry,  
+					SettlePur.class);
+			settlePur.setFinance_settlepay_pur_parentid(settleId);
+			//settlePurs.add(settlePur);
+			settleDao.saveSettlePur(settlePur);
+		 
+			Map<String, Object> map=new HashMap<String, Object>();
+			map.put("billID",settlePur.getFinance_settlepay_pur_purchaseid());
+			map.put("status",14);
+            purchaseDao.updateBillStatus(map);
+		  
+		}
+		
+		/*for(int i = 0; i < settlePurs.size(); i++){
+			settleDao.saveSettlePur(settlePurs.get(i));
+		}*/
+		return settleId;
+		
+	}
+
+	@Override
+	public Map<String, Object> initSettle(String id) {
+		
+		Map<String, Object> map=new HashMap<String, Object>();
+		Map<String, Object> data=new HashMap<String, Object>();
+		
+		String filds="*";
+		StringBuffer purSbuffer=new StringBuffer();
+		StringBuffer payPbuffer=new StringBuffer();
+		StringBuffer head=new StringBuffer();
+
+		map.put("filds", filds);
+		List<Map<String, Object>> settlePays=new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> settlePurs=new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> heads=new ArrayList<Map<String, Object>>();
+
+		map.put("where", payPbuffer);
+		payPbuffer.append("  finance_settlepay_payNum  where  finance_settlepay_purNum_parentid= "+id);
+		settlePays=settleDao.initSettle(map);
+		
+		map.put("where", head);
+		head.append("  finance_settlepay_table sett left join construct_project_table pro on sett.finance_settlepay_projectid=pro.construct_project_id  where  finance_settlepay_id= "+id);
+		heads=settleDao.initSettle(map);
+		
+		filds="finance_settlepay_pur_purchaseid,finance_settlepay_pur_supplier,construct_project_name,finance_settlepay_pur_shouldpay,finance_settlepay_pur_id,finance_settlepay_pur_parentid,finance_settlepay_pur_arrivedid";
+		purSbuffer.append("  finance_settlepay_pur pur left join construct_project_table pro on pur.finance_settlepay_pur_projectid=pro.construct_project_id  where  pur.finance_settlepay_pur_parentid= "+id);
+		map.put("where", purSbuffer);
+		map.put("filds", filds);
+		settlePurs=settleDao.initSettle(map);
+		
+		data.put("settlePays", settlePays);
+		data.put("settlePurs", settlePurs);
+		data.put("heads", heads);
+		return data;
+	}
+
+	/*@Override
+	public void auditSettle(Settle settle, String payRows, String purRows,
+			String username, String selectRole) {
+		int billId= saveSettlePay(settle, purRows);
+		// 工作流
+		Map<String, Object> linkMap = new HashMap<String, Object>();
+		linkMap.put("selectRole", selectRole); // 审批人
+		linkMap.put("flow_bill_id", billId); // 单据id
+		linkMap.put("flow_submitter", username); // 申请人
+		linkMap.put("flow_bill_url", "settlePayAudit.do");// 审核界面url
+		linkMap.put("flow_bill_type", "材料付款"); // 审核单据类型
+		flowService.saveFlowAudit(linkMap);
+		
+		
+	}
+*/
+	@Override
+	public List<Map<String, Object>> settlePayNumList(int page,
+			int pageSize, Ref<Integer> record, String where, String fields) throws Exception {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("where", where);
+		param.put("fields", fields);
+
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+		
+		List<Map<String, Object>> supplierList = settleDao.supplierList(param);
+		
+		if (record != null) {
+			record.setValue(supplierList.size());
+		}
+		return supplierList;
+	}
+
+	@Override
+	public int add_payNumList(SettlePay settlePay) {
+		int finance_settlepay_payNum_id = settlePay.getFinance_settlepay_payNum_id();
+		if(finance_settlepay_payNum_id==0){
+			settleDao.add_payNumList(settlePay);
+			finance_settlepay_payNum_id = settlePay.getFinance_settlepay_payNum_id();
+		}else {
+			settleDao.add_payNumList(settlePay);
+		}
+		return finance_settlepay_payNum_id;
+	}
+
+	@Override
+	@Transactional
+	public void delePur(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		
+
+		settleDao.delePur(map);
+	
+		map.put("billID",map.get("billid"));
+		map.put("status",13);
+        purchaseDao.updateBillStatus(map);
+	
+	}
+
+	@Override
+	@Transactional
+	public void delePayList(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		settleDao.delePayList(map);
+		StringBuffer sbf = new StringBuffer();
+		String table="finance_settlepay_pur";
+		sbf.append(" where finance_settlepay_pur_parentid in(" + Integer.valueOf(map.get("finance_settlepay_id").toString()) + ")");
+		map.put("table", table);
+		map.put("where", sbf.toString());
+		settleDao.delePayList(map);
+	}
+
+	@Override
+	public void delect_payNum(Map<String, Object> map){
+		settleDao.delePayList(map);
+	}
+
+	@Override
+	@Transactional
+	public void audit_payNum(SettlePay settlePay, String auditor,
+			String username) { 
+		int billId= add_payNumList(settlePay);
+		//工作流
+		Map<String, Object> linkMap = new HashMap<String, Object>();
+		linkMap.put("auditor", auditor); // 审批人
+		linkMap.put("flow_bill_id", billId); // 单据id
+		linkMap.put("flow_submitter", username); // 申请人
+		linkMap.put("flow_bill_url", "settlePayAudit.do");// 审核界面url
+		linkMap.put("flow_bill_type", "采购付款"); // 审核单据类型
+		flowService.saveFlowAudit(linkMap);
+		
+	}
+
+	@Override
+	@Transactional
+	public void auditBill(Map<String, Object> map, String auditor, int status) {
+		flowService.auditBill(map, auditor);
+		Map<String, Object> statusMap=new HashMap<String, Object>();
+		statusMap.put("status", status);
+		statusMap.put("billID", map.get("billID"));
+		settleDao.update_settlePayNum(statusMap);
+	}
+
+	@Override
+	public Map<String, Object> initAuditSettle(String id) {
+		String filds="finance_settlepay_purNum_parentid";
+		StringBuffer sBuffer=new StringBuffer();
+		Map<String, Object> map=new HashMap<String, Object>();
+		List<Map<String, Object>> parentIdList=new ArrayList<Map<String, Object>>();
+		sBuffer.append("  finance_settlepay_paynum   where  finance_settlepay_payNum_id= "+id);
+		map.put("where", sBuffer);
+		map.put("filds", filds);
+		parentIdList=settleDao.initSettle(map);
+		return initSettle(parentIdList.get(0).get("finance_settlepay_purNum_parentid").toString());
+	}
+  
+	 /***
+	  * 显示材料结算项目 
+	  * 
+	  * 
+	  * */
+	@Override
+	public List<Map<String, Object>> projectSuppliers(int page,
+			int pageSize, Ref<Integer> record,String fields, String where) throws Exception {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("where", where);
+		param.put("fields", fields);
+
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+		
+		List<Map<String, Object>> supplierList = settleDao.supplierList(param);
+		
+		if (record != null) {
+			record.setValue(supplierList.size());
+		}
+		return supplierList;
+	}
+
+	//
+	@Override
+	public List<Map<String, Object>> projectList(int page,
+			int pageSize, Ref<Integer> record,String fields, String where) throws Exception{
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("where", where);
+		param.put("fields", fields);
+
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+		
+		List<Map<String, Object>> supplierList = settleDao.supplierList(param);
+		
+		if (record != null) {
+			record.setValue(supplierList.size());
+		}
+		return supplierList;
+		
+
+	}
+	
+	
+
+
+	@Override
+	public List<Map<String, Object>> findList(Map<String, Object> map) {
+	 
+		return  settleDao.initSettle(map);
+	}
+	 
+}

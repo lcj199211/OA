@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.APartyDao">
+
+	<select id="getList" parameterType="map" resultType="map">
+		select * from ${where} ${limit}
+	</select>
+	<select id="getCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	
+	<select id="getData" parameterType="map" resultType="map">
+		select ${fields} from ${where} 
+	</select>
+
+	
+	<insert id="save_aPartyMaterial" parameterType="com.casd.entity.construct.ApartyMaterial">
+		insert into construct_aparty_material
+		(construct_Aparty_material_id,construct_Aparty_material_name,construct_Aparty_material_unit,construct_Aparty_material_category,
+		construct_Aparty_material_num,construct_Aparty_material_remark,construct_Aparty_material_constructId,construct_Aparty_material_model
+		)
+		VALUES
+		(
+		#{construct_Aparty_material_id},#{construct_Aparty_material_name},#{construct_Aparty_material_unit},#{construct_Aparty_material_category},
+		#{construct_Aparty_material_num},#{construct_Aparty_material_remark},#{construct_Aparty_material_constructId},#{construct_Aparty_material_model}
+		)
+		on duplicate key update
+		construct_Aparty_material_id=#{construct_Aparty_material_id},construct_Aparty_material_name=#{construct_Aparty_material_name},
+		construct_Aparty_material_unit=#{construct_Aparty_material_unit},construct_Aparty_material_category=#{construct_Aparty_material_category},
+		construct_Aparty_material_num=#{construct_Aparty_material_num},construct_Aparty_material_remark=#{construct_Aparty_material_remark},
+		construct_Aparty_material_constructId=#{construct_Aparty_material_constructId},construct_Aparty_material_model=#{construct_Aparty_material_model}
+	</insert>
+	
+	<delete id="delete_aPartyMaterial" parameterType="map">
+		DELETE FROM construct_aparty_material ${where} 
+	</delete>
+
+</mapper>
+
+

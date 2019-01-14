@@ -1,0 +1,221 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<head>
+<title></title>
+
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+<style type="text/css">
+fieldset {
+	border: solid 1px #aaa;
+}
+
+.hideFieldset {
+	border-left: 0;
+	border-right: 0;
+	border-bottom: 0;
+}
+
+.hideFieldset .fieldset-body {
+	display: none;
+}
+
+
+		
+			#main{
+				width:929px;
+				height:120px;
+				border: 1px solid #000;
+				margin: 10px auto;	
+				float: left;			
+			}
+			#main .title{
+				float: left;
+				
+			}
+			
+			#mes-tec{
+				height: 120px;
+				width:40px;
+				border-right: 1px solid #000;
+				text-align: center;
+			
+			}
+			
+			#huiqian{
+				height: 120px;
+				width:50px;
+				border-right: 1px solid #000;
+			}
+			
+			#huiqian div input{
+				height: 120px;
+				width:50px;
+				border:0;
+				padding-left:10px;
+				line-height:120px;
+			}
+			
+			
+			#huiqian_name{
+				width:170px;
+				border-right: 1px solid #000;
+				height: 120px;
+			}
+			#huiqian_name div input{
+				width:170px;
+				height: 120px;
+				border:0;
+				padding-left:10px;
+				line-height:120px;
+			}
+			
+			
+
+</style>
+</head>
+<body>
+	<h1>转正申请档案表</h1>
+
+	<fieldset id="fd" style="width:880px;">
+		<legend>
+			<span>转正申请</span>
+		</legend>
+		<div class="fieldset-body">
+			<table  id="db" class="form-table" border="0" cellpadding="1" cellspacing="2">
+			
+			<tr><td><input type="hidden" name="userid" id="userid" value="${userid}"/></td></tr>
+				<tr>
+					<td  style="width:60px;">姓名：</td>
+					<td  style="width:150px"><input type="text" name="username " id="username" value="${username}"/></td>	
+						
+					<td style="width:60px;">部门：</td>
+					<td style="width:150px"><input name="department" id="department" value="${department}"/></td>	
+					<td  style="width:60px;">职位：</td>
+					<td  style="width:150px"><input type="text" name="role_name " id="role_name" value="${role_name}" readonly="readonly"/></td>	
+				</tr>		
+				<tr>
+					<td  style="width:60px;">学历：</td>
+					<td style="width:150px"><input name="education" id="education"
+					value="${education}"/></td>
+					<td  style="width:60px;">专业：</td>
+					<td style="width:150px"><input name="major" id="major"
+						 value="${major}"/></td>
+					<td style="width:60px;">试用期待遇：</td>
+					<td style="width:150px"><input name="on_trial" id="on_trial"
+						 value="${on_trial}"/></td> 
+					
+				</tr>
+					
+				<tr>
+					<td class="form-label">试用期：</td>
+					<td><input value="${incorporation_date}" class="easyui-datebox" name="incorporation_date" id="incorporation_date"
+						value="" style="width:143px"></td>
+					<td class="form-label">至~：</td>
+					<td><input value="${close_time}" class="easyui-datebox" name="close_time" id="close_time"
+					 style="width:143px"></td>
+					 <td class="form-label">转正待遇：</td>
+					<td style="width:150px"><input name="worker" id="worker"
+					value="${worker}"/></td>
+				
+				</tr> 
+	
+			</table>
+	</div>
+
+
+	
+	<div id="main">
+		<div id="mes-tec" class="title">
+			<br/><br/>审<br/>批<br/>意<br/>见<br/>
+		</div>
+	
+		<div id="huiqian" class="title" >
+			<div>
+			<input id="personOne" value=""></input>
+			</div>
+		</div>
+		<div id="huiqian_name" class="title">
+		<div>
+			<input id="auditerOne"  value="" ></input>
+		</div>
+		</div>
+		<div id="huiqian" class="title">
+			<div>
+			<input id="personTwo" value=""></input>
+			</div>
+		</div>
+		<div id="huiqian_name" class="title">
+		<div>
+			<input id="auditerTwo"  value="" ></input>
+		</div>
+		</div>
+		
+		<div id="huiqian" class="title" >
+			<div>
+			<input id="personThree" value=""></input>
+			</div>
+		</div>
+		<div id="huiqian_name" class="title">
+		<div>
+			<input id="auditerThree"  value="" ></input>
+		</div>
+		</div>
+		<div id="huiqian" class="title">
+			<div>
+			<input id="personFour" value=""></input>
+			</div>
+		</div>
+		<div id="huiqian_name" class="title">
+		<div>
+			<input id="auditerFour"  value="" ></input>
+		</div>
+		</div>
+		
+	</div>
+	
+	<br />
+	<div id="audit"></div>
+
+	<script type="text/javascript">
+		$(function() {
+			if(${audit}!=undefined){
+				var auditlist=${audit}.audit;
+				json = eval(auditlist);
+				var auditerOne=json[0];
+				var auditerTwo=json[1];
+				var auditerThree=json[2];
+				var auditerFour=json[3];
+				if(auditerTwo!=undefined){
+					$("#auditerTwo").val(auditerTwo.flow_audit_option);
+					$("#personTwo").val(auditerTwo.flow_auditer);
+				}
+				if(auditerThree!=undefined){
+					$("#auditerThree").val(auditerThree.flow_audit_option);
+					$("#personThree").val(auditerThree.flow_auditer);
+				}
+				if(auditerFour!=undefined){
+					$("#auditerFour").val(auditerFour.flow_audit_option);
+					$("#personFour").val(auditerFour.flow_auditer);
+				}
+					
+				$("#auditerOne").val(auditerOne.flow_audit_option);
+				$("#personOne").val(auditerOne.flow_auditer);
+			}
+		
+		
+
+		}); 
+		
+		
+	</script>
+
+</body>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.hr.ResignDao">
+   
+   
+    <insert id="addResign" useGeneratedKeys="true" keyProperty="hr_resign_id" parameterType="com.casd.entity.hr.Resign">
+   		
+   		INSERT INTO hr_resign  (hr_resign_id,hr_resign_userid,hr_resign_applyDate,hr_resign_category,
+   		hr_resign_schLeave,hr_resign_realLeave,hr_resign_reason,hr_resign_dataHandover,hr_resign_workHandover,
+   		hr_resign_stationeryHandover,hr_resign_otherHandover,hr_resign_hrOpinion,hr_resign_payroll,hr_resign_financeOthers,
+   		hr_resign_topOpinion,hr_resign_confirmTime) 
+        VALUES (#{hr_resign_id},#{hr_resign_userid},#{hr_resign_applyDate},#{hr_resign_category},
+        #{hr_resign_schLeave},#{hr_resign_realLeave},#{hr_resign_reason},#{hr_resign_dataHandover},#{hr_resign_workHandover}
+        ,#{hr_resign_stationeryHandover},#{hr_resign_otherHandover},#{hr_resign_hrOpinion},#{hr_resign_payroll},#{hr_resign_financeOthers},
+        #{hr_resign_topOpinion},#{hr_resign_confirmTime})
+   		on duplicate key update hr_resign_id=#{hr_resign_id},hr_resign_userid=#{hr_resign_userid},
+	    						hr_resign_applyDate=#{hr_resign_applyDate},hr_resign_category=#{hr_resign_category},
+	    						hr_resign_schLeave=#{hr_resign_schLeave},hr_resign_realLeave=#{hr_resign_realLeave},
+	    						hr_resign_reason=#{hr_resign_reason},hr_resign_dataHandover=#{hr_resign_dataHandover},
+	    						hr_resign_workHandover=#{hr_resign_workHandover},hr_resign_stationeryHandover=#{hr_resign_stationeryHandover},
+	    						hr_resign_otherHandover=#{hr_resign_otherHandover},hr_resign_hrOpinion=#{hr_resign_hrOpinion},
+	    						hr_resign_payroll=#{hr_resign_payroll},hr_resign_financeOthers=#{hr_resign_financeOthers},
+	    						hr_resign_topOpinion=#{hr_resign_topOpinion},hr_resign_confirmTime=#{hr_resign_confirmTime}
+   </insert>
+   
+   
+   <select id="getData" parameterType="map" resultType="com.casd.entity.hr.Resign">
+		select  ${fields} from ${where}
+	</select>
+   
+   <update id="addAutoPath">
+   
+   		update hr_resign set ${where}
+   </update>
+   
+    <select id="findResign" parameterType="map" resultType="com.casd.entity.hr.Resign">
+		select  ${fields} from ${where}
+	</select>
+   
+   
+   <update id="updateResign" parameterType="com.casd.entity.hr.Resign">
+          update hr_resign 
+          <set>
+        	
+         	<if test="hr_resign_applyDate!=null">
+         		hr_resign_applyDate=#{hr_resign_applyDate},
+         	</if>
+         	<if test="hr_resign_category!=null">
+         		hr_resign_category=#{hr_resign_category},
+         	</if>
+         	<if test="hr_resign_schLeave!=null">
+         		hr_resign_schLeave=#{hr_resign_schLeave},
+         	</if>
+         	<if test="hr_resign_realLeave!=null">
+         		hr_resign_realLeave=#{hr_resign_realLeave},
+         	</if>
+         	<if test="hr_resign_reason!=null">
+         		hr_resign_reason=#{hr_resign_reason},
+         	</if>
+         	<if test="hr_resign_dataHandover!=null">
+         		hr_resign_dataHandover=#{hr_resign_dataHandover},
+         	</if>
+         	<if test="hr_resign_workHandover!=null">
+         		hr_resign_workHandover=#{hr_resign_workHandover},
+         	</if>
+         	<if test="hr_resign_stationeryHandover!=null">
+         		hr_resign_stationeryHandover=#{hr_resign_stationeryHandover},
+         	</if>
+         	<if test="hr_resign_otherHandover!=null">
+         		hr_resign_otherHandover=#{hr_resign_otherHandover},
+         	</if>
+         	<if test="hr_resign_hrOpinion!=null">
+         		hr_resign_hrOpinion=#{hr_resign_hrOpinion},
+         	</if>
+         	<if test="hr_resign_payroll!=null">
+         		hr_resign_payroll=#{hr_resign_payroll},
+         	</if>
+         	<if test="hr_resign_financeOthers!=null">
+         		hr_resign_financeOthers=#{hr_resign_financeOthers},
+         	</if>
+         	
+         	<if test="hr_resign_topOpinion!=null">
+         		hr_resign_topOpinion=#{hr_resign_topOpinion},
+         	</if>
+         	<if test="hr_resign_confirmTime!=null">
+         		hr_resign_confirmTime=#{hr_resign_confirmTime},
+         	</if>
+         	<if test="hr_resign_autoPath!=null">
+         		hr_resign_autoPath=#{hr_resign_autoPath},
+         	</if>
+         	<if test="hr_resign_sysManage!=null">
+         		hr_resign_sysManage=#{hr_resign_sysManage}
+         	</if>
+         	
+        </set>
+        where hr_resign_id=#{hr_resign_id}
+   
+   </update>
+   
+</mapper>

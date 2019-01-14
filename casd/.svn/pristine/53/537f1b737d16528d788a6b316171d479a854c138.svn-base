@@ -1,0 +1,699 @@
+package com.casd.serviceimpl.hr;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipInputStream;
+
+import org.activiti.engine.HistoryService;
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.history.HistoricActivityInstance;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.impl.RepositoryServiceImpl;
+import org.activiti.engine.impl.bpmn.behavior.UserTaskActivityBehavior;
+import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.activiti.engine.impl.identity.Authentication;
+import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
+import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.activiti.engine.impl.pvm.PvmActivity;
+import org.activiti.engine.impl.pvm.PvmTransition;
+import org.activiti.engine.impl.pvm.process.ActivityImpl;
+import org.activiti.engine.impl.task.TaskDefinition;
+import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Comment;
+import org.activiti.engine.task.IdentityLink;
+import org.activiti.engine.task.Task;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.utils.SendmailUtil;
+import com.casd.dao.uc.UserDao;
+import com.casd.entity.uc.User;
+import com.casd.service.construct.PurchaseService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.uc.UserService;
+
+@Service
+public class ActivitiServiceImpl implements ActivitiService {
+	
+	
+    
+
+	 /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	@Autowired
+	    private  ProcessEngine processEngine;
+	    @Autowired    
+	    private RuntimeService runtimeService;    
+	    @Autowired    
+	    private TaskService taskService;    
+	    @Autowired    
+	    private HistoryService historyService;    
+	    @Autowired    
+	    private RepositoryService repositoryService;    
+	    @Autowired    
+	    private ProcessEngineConfigurationImpl processEngineConfiguration;   
+	    @Autowired    
+	    private   PurchaseService purchaseService;
+	    
+	    @Autowired    
+	    private   UserDao userDao ;
+	    
+	    
+		
+		@Override
+		public void deploymentProcessDefinition_zip() throws FileNotFoundException {
+			
+			File file = new File(
+					"E:/chenganshidai/mydemo/WebRoot/res/activiti/leave_flow.zip");
+			InputStream in = new FileInputStream(file);
+
+			ZipInputStream zipInputStream = new ZipInputStream(in);
+			Deployment deployment = processEngine.getRepositoryService()// 与流程定义和部署对象相关的Service
+					.createDeployment()// 创建一个部署对象
+					.name("请假流程")// 添加部署的名称
+					.addZipInputStream(zipInputStream)// 指定zip格式的文件完成部署
+					.deploy();// 完成部署
+		}
+	    
+		
+		
+
+	    /** 
+	     * 启动流程 
+	     * @param bizId 业务为id 
+	     * @param name  申请人名字
+	     * @param title  标题
+	     * @param  processDefinitioKey 流程定义的 key  例如 ：Leave_flow
+	     */  
+		@Transactional
+	    public void startProcesses(String bizId,String name,String processDefinitioKey,String title)throws Exception{   
+	    	Map<String, Object> vars=new HashMap<String, Object>();
+	 	    vars.put("username", name);//设置第一个人审批人为申请人 
+	 	    vars.put("title", title); //任务类型 
+	     ProcessInstance pi = runtimeService.startProcessInstanceByKey(processDefinitioKey,bizId,vars);//流程图id，业务表id  
+	      
+	    }
+          
+            
+		 /***
+		  *  获取业务id		 
+		  * @param   任务 id  taskId
+		  * @return 业务id
+		  */
+		 public String getBusinessBizId(String taskId) {
+		        //1  获取任务对象
+		        Task task  =  taskService.createTaskQuery().taskId(taskId).singleResult();
+		        
+		        //2  通过任务对象获取流程实例
+		        ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceId(task.getProcessInstanceId()).singleResult();
+		        //3 通过流程实例获取“业务键”
+		        String businessKey = pi.getBusinessKey();
+		    
+		        String bizId = null;
+		        if(StringUtils.isNotBlank(businessKey)){
+		        	bizId = businessKey;
+		        }
+		        return bizId;
+		    }
+
+		 
+		 /**
+		  * 查询任务完成后的连线
+		  * @author    liao
+		  * @param     任务id  taskId
+		  * 
+		  * 
+		  */
+		 public List<String> findOutComeListByTaskId(String taskId) {
+			 
+			List<IdentityLink>lists=  taskService.getIdentityLinksForTask(taskId);//当前办理人
+				//返回存放连线的名称集合
+				 List<String> list=new ArrayList<String>();		
+			     //1.使用任务Id,查询任务对象
+				Task task=taskService.createTaskQuery()
+						             .taskId(taskId) //使用任务Id查询
+						             .singleResult();
+				//2.获取流程定义ID
+				String processDefinitionId=task.getProcessDefinitionId();
+				//3.查询ProcessDefinitionEntity对象
+				ProcessDefinitionEntity processDefinitionEntity=(ProcessDefinitionEntity) repositoryService.getProcessDefinition(processDefinitionId);
+				
+				 //使用任务对象task获取流程实例Id
+			 	 String processInstanceId =task.getProcessInstanceId();
+				//使用流程实例Id，查询正在执行的执行对象表，返回流程实例对象
+				  ProcessInstance pi= runtimeService.createProcessInstanceQuery()//创建流程实例查询
+						                            .processInstanceId(processInstanceId)//使用流程实例ID查询
+						                            .singleResult();
+				  //获取当前活动的Id
+				  String activityId=pi.getActivityId();
+				//4.获取当前的活动
+				  ActivityImpl activityImpl=processDefinitionEntity.findActivity(activityId);
+				  //5.获取当前活动完成之后连线的名称
+				  List<PvmTransition> pvmList=activityImpl.getOutgoingTransitions();
+				  if (pvmList!=null&&pvmList.size()>0) {
+					  for (PvmTransition pvm:pvmList) {
+						String name=(String) pvm.getProperty("name");//获取连线的名称
+						if (StringUtils.isNotBlank(name)) {
+							list.add(name);
+						}else {
+							list.add("提交");
+						}
+					}
+					
+				}
+			
+				return list;
+			} 
+		 
+		 
+		 
+		 
+		 
+		 
+	    /** 
+	     * 添加批注 
+	     * @author liao
+	     * @param 批注信息        comment
+	     * @param  审批人          userid  名字
+	     * @param  任务id    taskId
+	     *   添加字段固定
+	     */  
+		 
+		@Transactional
+	    public Comment  comment(String taskId,String userid,String comment){
+			
+			Task task=taskService.createTaskQuery().taskId(taskId).singleResult();
+			//利用任务对象，获取流程实例id
+			String processInstancesId=task.getProcessInstanceId();
+			
+    		 Authentication.setAuthenticatedUserId(userid);//批注人的名称  一定要写，不然查看的时候不知道人物信息
+		        // 添加批注信息
+		     Comment  comment2=  taskService.addComment(taskId, processInstancesId, comment);//comment为批注内容
+		   
+  
+		    System.out.println(comment2.getId());
+		        // 完成任务
+		        //taskService.complete(taskId,vars);//vars是一些变量
+			return comment2;
+		 }
+		
+		
+		@Transactional
+	    public void   comment(Map<String, Object> map){
+			
+		/*	Task task=taskService.createTaskQuery().taskId(taskId).singleResult();
+			//利用任务对象，获取流程实例id
+			String processInstancesId=task.getProcessInstanceId();
+			
+    		 Authentication.setAuthenticatedUserId(userid);//批注人的名称  一定要写，不然查看的时候不知道人物信息
+		        // 添加批注信息
+		     Comment  comment2=  taskService.addComment(taskId, processInstancesId, comment);//comment为批注内容
+*/  
+		   
+		        // 完成任务
+		        //taskService.complete(taskId,vars);//vars是一些变量
+		 }
+		
+		
+		
+		/***
+		 * 使用任务id查询审批记录
+		 * @author 廖
+		 * @param  任务id  taskId
+		 * @return
+		 * @throws Exception 
+		 */
+		
+		 public List<Map<String, Object>> getProcessComments(String taskId) throws Exception {
+			 List<Map<String, Object>>   hislist = new ArrayList<Map<String, Object>>();
+//		         1) 获取流程实例的ID
+		        Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+		      
+		        ProcessInstance pi =runtimeService.createProcessInstanceQuery().processInstanceId(task.getProcessInstanceId()).singleResult();
+		        String processInstanceId = pi.getId();
+		        if (processInstanceId !=null) {
+		        
+				        StringBuffer sbf=new StringBuffer();
+				        sbf.append(" ACT_HI_COMMENT a");
+				        sbf.append(" left JOIN  uc_user b on a.USER_ID_ =b.userid");
+				        sbf.append(" left JOIN  uc_center c on b.center_id=c.center_id");
+				        sbf.append(" left JOIN  uc_department d ON  b.department = d.department_id");
+				        sbf.append(" WHERE  a.PROC_INST_ID_="+processInstanceId);            
+				        Map<String, Object> param=new HashMap<String, Object>();
+				        String  fields="a.MESSAGE_,b.username,c.center_name,d.department_name";
+				        param.put("fields", fields);    
+				        param.put("where", sbf.toString());
+				              
+				        //查询部门和中心
+				       hislist=userDao.queryId(param);
+				}
+		        
+
+//		  
+		       
+//		       5）返回
+		         return hislist;
+		    }    
+		 
+		 
+		 
+
+			/***
+			 * 使用流程实例id查询审批记录
+			 * @author 廖
+			 * @param  流程实例id  processInstanceId  processInstanceId
+			 * @return
+			 */
+			
+			 public List<Comment> findCommentBytaskId(String processInstanceId) {
+			        List<Comment> historyCommnets = new ArrayList<Comment>();
+
+			        historyCommnets= taskService.getProcessInstanceComments(processInstanceId);
+			        
+			         return historyCommnets;
+			    }
+
+
+
+
+			 /***
+				 * 使用 业务单据id查询审批记录
+				 * @author 廖
+				 * @param  业务单据id    bizId
+				 * @param  流程实例key   beyId
+				 * @return
+			 * @throws Exception 
+				 */
+		 
+			@Override
+		    public List<Map<String, Object>> viewHisComments(String bizId,String beyId) throws Exception {
+				  /* List<Comment> historyCommnets = new ArrayList<Comment>();*/
+				
+				  List<Map<String, Object>>  hislist=null;
+		        /**2:使用历史的流程变量查询，返回历史的流程变量的对象，获取流程实例ID*/
+				
+				String objname=beyId+"."+bizId;
+		        HistoricProcessInstance hpi = historyService.createHistoricProcessInstanceQuery()//对应历史的流程变量表
+		                         .processInstanceBusinessKey(objname)
+		                        .singleResult();
+		        
+		        if (hpi!=null) {		
+		        //流程实例ID
+		        String processInstanceId = hpi.getId();		
+		        
+		        
+		        StringBuffer sbf=new StringBuffer();
+		        sbf.append(" ACT_HI_COMMENT a");
+		        sbf.append(" left JOIN  uc_user b on a.USER_ID_ =b.userid");
+		        sbf.append(" left JOIN  uc_center c on b.center_id=c.center_id");
+		        sbf.append(" left JOIN  uc_department d ON b.department= d.department_id");
+		        sbf.append(" WHERE  a.PROC_INST_ID_="+processInstanceId);            
+		        Map<String, Object> param=new HashMap<String, Object>();
+		        String  fields="a.MESSAGE_,b.username,c.center_name,d.department_name";
+		        param.put("fields", fields);    
+		        param.put("where", sbf.toString());
+		              
+		        //查询部门和中心
+		       hislist=userDao.queryId(param);
+		      // ProcessInstance pi =runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+//			       2）通过流程实例查询所有的(用户任务类型)历史活动   
+			   /*     List<HistoricActivityInstance> hais = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId).activityType("userTask").list();
+//			       3）查询每个历史任务的批注
+			        for (HistoricActivityInstance hai : hais) {
+			            String historytaskId = hai.getTaskId();
+			            List<Comment> comments = taskService.getTaskComments(historytaskId);
+			            // 4）如果当前任务有批注信息，添加到集合中
+			            if(comments!=null && comments.size()>0){
+			                historyCommnets.addAll(comments);
+			            }
+			        }}
+//			       5）返回
+			         return historyCommnets;
+		      */
+		    
+		        }
+		        return hislist;
+		    }
+
+			 
+			@Override
+		    public List<Comment> viewHisComments1(String bizId,String beyId) {
+				   List<Comment> historyCommnets = new ArrayList<Comment>();
+		        /**2:使用历史的流程变量查询，返回历史的流程变量的对象，获取流程实例ID*/
+				
+				String objname=beyId+"."+bizId;
+		        HistoricProcessInstance hpi = historyService.createHistoricProcessInstanceQuery()//对应历史的流程变量表
+		                         .processInstanceBusinessKey(objname)
+		                        .singleResult();
+		        //流程实例ID
+		        String processInstanceId = hpi.getId();
+		        ProcessInstance pi =runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+//			       2）通过流程实例查询所有的(用户任务类型)历史活动   
+			        List<HistoricActivityInstance> hais = historyService.createHistoricActivityInstanceQuery().processInstanceId(pi.getId()).activityType("userTask").list();
+//			       3）查询每个历史任务的批注
+			        for (HistoricActivityInstance hai : hais) {
+			            String historytaskId = hai.getTaskId();
+			            List<Comment> comments = taskService.getTaskComments(historytaskId);
+			            // 4）如果当前任务有批注信息，添加到集合中
+			            if(comments!=null && comments.size()>0){
+			                historyCommnets.addAll(comments);
+			            }
+			        }
+//			       5）返回
+			         return historyCommnets;
+		   
+		    }
+
+			
+			/**
+		     * 根据实例编号查找下一个任务节点
+		     * 
+		     * @param String
+		     *     procInstId ：实例编号
+		     * @return
+			 * @throws Exception 
+		     */
+	
+		    public List<Map<String, Object>> backTaskTab(String taskId) throws Exception {
+		        Task task = taskService.createTaskQuery() // 创建任务查询
+		                .taskId(taskId) // 根据任务id查询
+		                .singleResult();
+
+		        String procInstId = task.getProcessInstanceId();
+		        // 流程标示
+		        String processDefinitionId = historyService.createHistoricProcessInstanceQuery().processInstanceId(procInstId)
+		                .singleResult().getProcessDefinitionId();
+
+		        ProcessDefinitionEntity def = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
+		                .getDeployedProcessDefinition(processDefinitionId);
+		        // 执行实例
+		        ExecutionEntity execution = (ExecutionEntity) runtimeService.createProcessInstanceQuery()
+		                .processInstanceId(procInstId).singleResult();
+		        // 当前实例的执行到哪个节点
+		        String activitiId = execution.getActivityId();
+		        // 获得当前任务的所有节点
+		        List<ActivityImpl> activitiList = def.getActivities();
+		        ActivityImpl activityImpl=null;
+		        
+		        String fields=" a.userid,a.username";
+		        String where=null;
+		        
+		        Map<String, Object> param=new HashMap<String, Object>();
+		        for(int i=0;i< activitiList.size();i++){
+		            String flag=activitiList.get(i).getId();
+		            if(flag.equals(activitiId)){
+		                activityImpl=activitiList.get(i);
+		            }
+		        }
+		     
+		        int num=activitiList.indexOf(activityImpl);
+		        ActivityImpl activityImpl_=activitiList.get(num+1);
+		    	Map<String, Object> params=new HashMap<String, Object>();
+		      List<Map<String, Object>> listuser=new ArrayList<Map<String,Object>>();
+		     if (activityImpl.getProperty("name").equals("项目经理提出申请")){
+		    	 listuser= purchaseService.fidbusiness();
+             }else if (activityImpl.getProperty("name").equals("经营部审核")) {
+            	 listuser= purchaseService.manageraAudit();
+			 }else if (activityImpl.getProperty("name").equals("总经理审核")) {
+				 listuser= purchaseService.purchasingcheck();
+			 }else if(activityImpl.getProperty("name").equals("采购核对单价")){
+				 listuser= purchaseService.financialcheck();
+			 }else if(activityImpl.getProperty("name").equals("财务经理审批")){
+				 listuser= purchaseService.chairmancheck();
+			}else if(activityImpl.getProperty("name").equals("董事会审批")){
+							
+				String cghd=  taskService.getVariable(taskId,"cghd").toString();
+                  where=" uc_user a  where a.userid="+cghd;
+				
+				   param.put("fields", fields);    
+			       param.put("where", where);
+			     listuser=userDao.queryId(param);
+			
+			}else if(activityImpl.getProperty("name").equals("申请采购单下单")){
+				 listuser= purchaseService.supplierUser();
+			}else if(activityImpl.getProperty("name").equals("配货")){
+				String username=  taskService.getVariable(taskId,"username").toString();
+				 where=" uc_user a  where a.userid="+username;
+					
+				   param.put("fields", fields);    
+			       param.put("where", where);
+			     listuser=userDao.queryId(param);
+			
+			}else if(activityImpl.getProperty("name").equals("核对签收")){
+				String cghd=  taskService.getVariable(taskId,"cghd").toString();
+				 where=" uc_user a  where a.userid="+cghd;
+					
+				   param.put("fields", fields);    
+			       param.put("where", where);
+			     listuser=userDao.queryId(param);
+				
+			}else if(activityImpl.getProperty("name").equals("复核价格及数量")){
+				String peihuo=  taskService.getVariable(taskId,"peihuo").toString();
+				 where=" uc_user a  where a.userid="+peihuo;
+					
+				   param.put("fields", fields);    
+			       param.put("where", where);
+			     listuser=userDao.queryId(param);
+
+			}else if(activityImpl.getProperty("name").equals("申请请款")){
+				String cghd=  taskService.getVariable(taskId,"cghd").toString();
+				 where=" uc_user a where a.userid="+cghd;
+					
+				   param.put("fields", fields);    
+			       param.put("where", where);
+			     listuser=userDao.queryId(param);
+			}
+		     
+			/* }else if (activityImpl.getProperty("name").equals("采购核对单价")) {
+				 listuser= purchaseService.fidbusiness();
+					  
+			 }else if (activityImpl.getProperty("name").equals("财务经理审批")) {
+				 listuser= purchaseService.fidbusiness();*/
+					  
+			
+		        
+		        return listuser;
+		    }
+			
+			/** 
+		     * 根据实例编号查找下一个任务节点 
+		     * @param String procInstId ：实例编号 
+		     * @return 
+		     */  
+		    public TaskDefinition nextTaskDefinition(String procInstId){  
+		    	
+		        //流程标示  
+		        String processDefinitionId = historyService.createHistoricProcessInstanceQuery().processInstanceId(procInstId).singleResult().getProcessDefinitionId();  
+		          
+		        ProcessDefinitionEntity def = (ProcessDefinitionEntity) ((RepositoryServiceImpl)repositoryService).getDeployedProcessDefinition(processDefinitionId);  
+		        //执行实例  
+		        ExecutionEntity execution = (ExecutionEntity) runtimeService.createProcessInstanceQuery().processInstanceId(procInstId).singleResult();  
+		        //当前实例的执行到哪个节点  
+		        String activitiId = execution.getActivityId();  
+		        //获得当前任务的所有节点  
+		        List<ActivityImpl> activitiList = def.getActivities();  
+		        String id = null;  
+		        for(ActivityImpl activityImpl:activitiList){    
+		            id = activityImpl.getId();   
+		            if(activitiId.equals(id)){  
+		                System.out.println("当前任务："+activityImpl.getProperty("name"));  
+		                return nextTaskDefinition(activityImpl, activityImpl.getId(),"s1");  //s1和审核通过的条件
+//		              System.out.println(taskDefinition.getCandidateGroupIdExpressions().toArray()[0]);  
+//		              return taskDefinition;  
+		            }  
+		        }  
+		        return null;  
+		    }  
+		      
+		    /** 
+		     * 下一个任务节点 
+		     * @param activityImpl 
+		     * @param activityId 
+		     * @param elString 
+		     * @return 
+		     */  
+		    private TaskDefinition nextTaskDefinition(ActivityImpl activityImpl, String activityId, String elString){ 
+		    	 TaskDefinition taskDefinition=null;
+		            if("userTask".equals(activityImpl.getProperty("type")) && !activityId.equals(activityImpl.getId())){  
+		                taskDefinition = ((UserTaskActivityBehavior)activityImpl.getActivityBehavior()).getTaskDefinition();  
+//		              taskDefinition.getCandidateGroupIdExpressions().toArray();  
+		                return taskDefinition;  
+		            }else{  
+		                List<PvmTransition> outTransitions = activityImpl.getOutgoingTransitions();  
+		                List<PvmTransition> outTransitionsTemp = null;  
+		                for(PvmTransition tr:outTransitions){    
+		                    PvmActivity ac = tr.getDestination(); //获取线路的终点节点    
+		                    if("exclusiveGateway".equals(ac.getProperty("type"))){  
+		                        outTransitionsTemp = ac.getOutgoingTransitions();  
+		                        if(outTransitionsTemp.size() == 1){  
+		                            return nextTaskDefinition((ActivityImpl)outTransitionsTemp.get(0).getDestination(), activityId, elString);  
+		                        }else if(outTransitionsTemp.size() > 1){  
+		                            for(PvmTransition tr1 : outTransitionsTemp){  
+		                                Object s = tr1.getProperty("conditionText");  
+		                                if(elString.equals(StringUtils.trim(s.toString()))){  
+		                                    return nextTaskDefinition((ActivityImpl)tr1.getDestination(), activityId, elString);  
+		                                }  
+		                            }  
+		                        }  
+		                    }else if("userTask".equals(ac.getProperty("type"))){  
+		                    	taskDefinition =((UserTaskActivityBehavior)((ActivityImpl)ac).getActivityBehavior()).getTaskDefinition();  
+		                      System.out.println(taskDefinition.getCandidateUserIdExpressions()+""+taskDefinition.getCustomUserIdentityLinkExpressions());
+		                    }else{  
+		                      
+		                    }  
+		                }   
+		            return null;  
+		        }  
+		    }
+
+
+		    /** 
+		     * 拾取任务
+		     * 
+		     * @author liao
+		     * 
+		     * @param 任务id    taskId 
+		     * @param 用户名       username
+		     * 
+		     * 
+		     */ 
+			@Override
+			public void claim(String taskId, String username) {
+				taskService.claim(taskId, username);
+				
+			}
+		    
+		    
+		    
+			
+
+			/**
+		     * 根据实例编号查找下一个任务节点
+		     * 
+		     * @param String
+		     *     procInstId ：实例编号
+		     * @return
+			 * @throws Exception 
+		     */
+	
+		    public ActivityImpl usertask(String taskId) throws Exception {
+		        Task task = taskService.createTaskQuery() // 创建任务查询
+		                .taskId(taskId) // 根据任务id查询
+		                .singleResult();
+
+		        String procInstId = task.getProcessInstanceId();
+		        // 流程标示
+		        String processDefinitionId = historyService.createHistoricProcessInstanceQuery().processInstanceId(procInstId)
+		                .singleResult().getProcessDefinitionId();
+
+		        ProcessDefinitionEntity def = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
+		                .getDeployedProcessDefinition(processDefinitionId);
+		        // 执行实例
+		        ExecutionEntity execution = (ExecutionEntity) runtimeService.createProcessInstanceQuery()
+		                .processInstanceId(procInstId).singleResult();
+		        // 当前实例的执行到哪个节点
+		        String activitiId = execution.getActivityId();
+		        // 获得当前任务的所有节点
+		        List<ActivityImpl> activitiList = def.getActivities();
+		        ActivityImpl activityImpl=null;
+		        for(int i=0;i< activitiList.size();i++){
+		            String flag=activitiList.get(i).getId();
+		            if(flag.equals(activitiId)){
+		                activityImpl=activitiList.get(i);
+		            }
+		        }
+			return   activityImpl;
+		    }
+
+
+
+
+			    @Override
+			  public  String deleteprocessInstance(String bizId,String beyId) {
+				
+				    String objname=beyId+"."+bizId;
+		           HistoricProcessInstance hpi = historyService.createHistoricProcessInstanceQuery()//对应历史的流程变量表
+		                         .processInstanceBusinessKey(objname)
+		                        .singleResult();
+		         //流程实例ID
+		           String processInstanceId = hpi.getId();	
+		         
+				    
+				return processInstanceId;
+			}
+
+
+
+
+				/**
+			     * 发送邮件
+			     * 
+			     * @param theme
+			     *            邮件头文件名
+			     * @param     content
+			     *            邮件内容
+			     * @param nextUser
+			     *            收件人地址  收件人邮箱
+			     */
+	  public  Map<String, Object> sendEmail(String theme,String content,String nextUser)throws Exception{
+					 Map<String, Object> json=new HashMap<String, Object>();
+					 SendmailUtil sendmailUtil =null;
+						json.put("message", "");
+						if(!StringUtils.isEmpty(nextUser)){
+							String fields=" email";	
+						String where=" uc_user where userid="+nextUser+"";
+						Map<String, Object> useMap=new HashMap<String, Object>();
+						useMap.put("fields", fields);
+						useMap.put("where", where);
+					
+						User uc=userDao.login(useMap);
+				
+						//判断Emali的邮箱是否为null
+						if (uc!=null&&uc.getEmail()!=null) {
+						
+							 sendmailUtil = (SendmailUtil) Class.forName(
+										"com.casd.controller.web.utils.SendmailUtil").newInstance();
+								sendmailUtil.doSendHtmlEmail(theme, content,uc.getEmail());
+								json.put("message", "邮件已发送!");
+								
+						}else {
+							    
+							    json.put("message", "邮件发送失败!");
+						}
+						}
+						return json;
+			            }
+
+		    
+    /*     
+	    *
+		@Override
+		public List<Task> findTaskList(String userId) {
+			  
+			
+			   List<Task> resultTask = taskService.createTaskQuery().taskCandidateUser(userId).list(); //查询获选人
+		        for (Task task:resultTask) {
+					System.out.println(task.getId()+task.getProcessInstanceId());
+					task.getFormKey();
+				}
+		        return resultTask;   
+		}    */
+
+
+
+}

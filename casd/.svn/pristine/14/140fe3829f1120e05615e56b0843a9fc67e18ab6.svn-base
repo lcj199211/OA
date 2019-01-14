@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.manage.AchReviewDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+   <insert id="save_achReview" useGeneratedKeys="true" keyProperty="achReview_id" parameterType="com.casd.entity.manage.AchReview">
+   		
+   		INSERT INTO manage_achreview  (achReview_id,achReview_company,achReview_supCenter,achReview_comOpinion,
+   		achReview_dirOpinion,achReview_month,achReview_creatDate) 
+        VALUES (#{achReview_id},#{achReview_company},#{achReview_supCenter},#{achReview_comOpinion},
+        #{achReview_dirOpinion},#{achReview_month},#{achReview_creatDate})
+   		on duplicate key update achReview_id=#{achReview_id},achReview_company=#{achReview_company},
+	    						achReview_supCenter=#{achReview_supCenter},achReview_comOpinion=#{achReview_comOpinion},
+	    						achReview_dirOpinion=#{achReview_dirOpinion},achReview_month=#{achReview_month},
+	    						achReview_creatDate=#{achReview_creatDate}
+   </insert>
+   
+   <select id="getData" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+   <delete id="delete_data" parameterType="map">
+       DELETE FROM   ${where}
+    </delete>
+   
+</mapper>

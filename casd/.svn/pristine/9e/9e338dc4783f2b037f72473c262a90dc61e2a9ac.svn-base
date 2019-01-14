@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.finance.MaterialPriceDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+     
+     <insert id="addPrice" parameterType="com.casd.entity.finance.MaterialPrice">
+      insert into  construct_material_price 
+      (
+      construct_material_priceId,construct_material_name,construct_material_model,
+      construct_material_unit,construct_material_brand,construct_material_supplier,
+      construct_material_price,construct_material_remarks,construct_material_supplierTel,
+      construct_material_supplierId,construct_material_modelId,construct_lowest_price,construct_latest_price
+      ) 
+      
+        VALUES  
+	        (
+	         #{construct_material_priceId},#{construct_material_name},#{construct_material_model},#{construct_material_unit},
+             #{construct_material_brand}, #{construct_material_supplier}, #{construct_material_price},
+             #{construct_material_remarks}, #{construct_material_supplierTel}
+             , #{construct_material_supplierId}, #{construct_material_modelId}, #{construct_lowest_price}, #{construct_latest_price}
+             )  
+	        on duplicate key update construct_material_priceId=#{construct_material_priceId},
+	                                construct_material_name=#{construct_material_name},
+	                                construct_material_model=#{construct_material_model},
+	                                construct_material_unit=#{construct_material_unit},
+	                                construct_material_brand=#{construct_material_brand},
+	                                construct_material_supplier=#{construct_material_supplier},
+	                                construct_material_price=#{construct_material_price},
+	                                construct_material_supplierTel=#{construct_material_supplierTel},
+	                                construct_material_supplierId=#{construct_material_supplierId},
+	                                construct_material_modelId=#{construct_material_modelId},
+	                                construct_lowest_price=#{construct_lowest_price},
+	                                construct_latest_price=#{construct_latest_price}
+     </insert>
+     
+     
+    <!-- 材料价钱列表 -->
+    <select id="materialPrice" parameterType="map" resultType="map">
+        select * from ${where} ${limit}
+    </select>
+     <select id="getMaterialPriceCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    <delete id="deletePrice" parameterType="map">
+    DELETE  FROM  construct_material_price ${where}
+    </delete>
+    
+    <update id="update_price" parameterType="map">
+    UPDATE construct_material_price SET ${wath}
+    
+    </update>
+     
+     <insert id="add_NewPrice" parameterType="com.casd.entity.finance.Construct_change_price">
+      insert into  construct_change_price 
+      (
+      construct_change_id,construct_material_priceId,construct_material_name,
+      construct_material_model,construct_material_unit,construct_material_supplier,
+      construct_material_price,construct_material_supplierId,construct_material_modelId,
+      construct_lowest_price,construct_latest_price,construct_change_headId
+      ) 
+      
+        VALUES  
+	        (
+	         #{construct_change_id},#{construct_material_priceId},#{construct_material_name},
+	         #{construct_material_model}, #{construct_material_unit}, #{construct_material_supplier},
+	         #{construct_material_price}, #{construct_material_supplierId}, #{construct_material_modelId},
+	          #{construct_lowest_price}, #{construct_latest_price}, #{construct_change_headId}
+             )  
+	        on duplicate key update construct_change_id=#{construct_change_id}
+	                            
+     </insert>
+    
+       <delete id="deleteNewPrice" parameterType="map">
+         DELETE FROM  construct_change_price ${where}
+      </delete>
+    
+    
+    
+</mapper>
+
+

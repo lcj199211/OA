@@ -1,0 +1,539 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>首页</title>
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+<style type="text/css">
+fieldset {
+	border: solid 1px #aaa;
+}
+
+.hideFieldset {
+	border-left: 0;
+	border-right: 0;
+	border-bottom: 0;
+}
+
+.hideFieldset .fieldset-body {
+	display: none;
+}
+</style>
+</head>
+<body>
+	<div>
+		<table>
+			<tr>
+				<td width="950px">
+					<h1>广东诚安时代人事档案表</h1>
+				</td>
+				<td><a href="javascript:void(0)" class="easyui-linkbutton"
+					data-options="iconCls:'icon-save',plain:true" onclick="accept()">保存</a>
+				</td>
+				<td><a href="javascript:void(0)" class="easyui-linkbutton"
+					data-options="iconCls:'icon-back',plain:true" onclick="btnCancel()">取消</a>
+				</td>
+			</tr>
+		</table>
+
+	</div>
+
+	<fieldset id="fd1" style="width:1100px;">
+		<legend>
+			<span>基本信息</span>
+		</legend>
+		<div class="fieldset-body">
+			<form id="head" method="post">
+				<table class="form-table" border="0" cellpadding="1" cellspacing="2">
+					<tr>
+						<td><input style="display: none" name="userid" id="userid"
+							value="${data.userid}" /></td>
+					</tr>
+					<tr>
+						<td class="form-label" style="width:60px;">申请日期：</td>
+						<td style="width:150px"><input type="text" name="user_num"
+							id="user_num" value="${pro.user_num}" class="mini-textbox" /></td>
+						<td class="form-label" style="width:60px;">离职类别：</td>
+						<td style="width:150px"><input type="text" name="user_num"
+							id="user_num" value="${pro.user_num}" class="mini-textbox" /></td>
+						<td class="form-label" style="width:60px;">预定离公司日期：</td>
+						<td style="width:150px"><input type="text" name="user_num"
+							id="user_num" value="${pro.user_num}" class="mini-textbox" /></td>
+						<td class="form-label" style="width:60px;">实际离公司日期：</td>
+						<td style="width:150px"><input type="text" name="user_num"
+							id="user_num" value="${pro.user_num}" class="mini-textbox" /></td>				
+					</tr>
+					<tr>
+						<td class="form-label" style="width:60px;">离职原因：</td>
+						<td style="width:600px"><input type="text" name="user_num"
+							id="user_num" value="${pro.user_num}" class="mini-textbox" /></td>
+					</tr>
+
+				</table>
+			</form>
+		</div>
+	</fieldset>
+
+
+
+
+	<div id="tab" class="easyui-tabs" style="width:1125px;height:500px">
+		<div title="公司职位变动记录" style="padding:10px">
+			<table id="dg" class="easyui-datagrid"
+				style="width:900px;height:auto"
+				data-options="
+					iconCls: 'icon-edit',
+					singleSelect: true,
+			        toolbar: '#tb',
+					onClickCell: onClickCell
+				">
+				<thead>
+					<tr>
+						<th
+							data-options="field:'job_id',width:80,hidden:'hidden',editor:'text'">员工变动编号</th>
+						<th
+							data-options="field:'begin_date',width:100,editor:{type:'datebox',options:{required:true}}">开始时间</th>
+						<th
+							data-options="field:'end_date',width:100,editor:{type:'datebox',options:{required:true}}">结束时间</th>
+						<th
+							data-options="field:'corporate_name',width:120,editor:{type:'text',options:{precision:1}}">公司名称</th>
+						<th data-options="field:'job_name',width:80,editor:'text'">职位</th>
+						<th data-options="field:'reason',width:250,editor:'text'">变动原因</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<div title="转正记录" style="padding:10px">
+			<table id="dg2" class="easyui-datagrid"
+				style="width:900px;height:auto"
+				data-options="
+							iconCls: 'icon-edit',
+						singleSelect: true,">
+				<thead>
+					<tr>
+						<th halign="center" field="bc_id" align="center" sortable="true"
+							width="60px">转正编号</th>
+						<th halign="center" field="user_id" align="center" sortable="true"
+							width="60px">用户编号</th>
+						<th halign="center" field="username" align="center"
+							sortable="true" width="120px">转正人姓名</th>
+						<th halign="center" field="role_name" align="center"
+							sortable="true" width="120px">职位</th>
+						<th halign="center" field="on_trial" align="center"
+							sortable="true" width="120px">试用期待遇</th>
+						<th halign="center" field="bc_status" align="center"
+							sortable="true" width="120px" formatter="operate_status">状态</th>
+						<th halign="center" field="psn" sortable="true" width="120px"
+							formatter="operate_formatter">操作</th>
+					</tr>
+				</thead>
+			</table>
+
+		</div>
+		
+	</div>
+
+
+	</div>
+	<script type="text/javascript">
+		$(function() {
+			//数据初始化
+			var userid = $("#userid").val();
+			$("#sex").val(${pro.sex});
+			$("#marital_status").val(${pro.marital_status});
+			$("#role_id").val(${pro.role_id});
+			$("#education").val(${pro.education});
+			$("#level").val(${pro.level});
+			$("#blood").val(${pro.blood});
+			$("#health").val(${pro.health});
+			$("#status").val(${pro.status});
+
+			if (userid != 0) {
+				var obj1 = ${rows}.rows1;
+				$('#dg').datagrid('loadData', obj1); //表格数据加载
+
+				var obj2 = ${rows}.rows2;
+				$('#dg2').datagrid('loadData', obj2);
+
+				var obj3 = ${rows}.rows3;
+				$('#dg3').datagrid('loadData', obj3);
+
+				var obj4 = ${rows}.rows4;
+				$('#dg4').datagrid('loadData', obj4);
+			}
+
+			$.extend($.fn.datagrid.methods, {
+				editCell : function(jq, param) {
+					return jq.each(function() {
+						var opts = $(this).datagrid('options');
+						var fields = $(this).datagrid('getColumnFields', true)
+								.concat($(this).datagrid('getColumnFields'));
+						for (var i = 0; i < fields.length; i++) {
+							var col = $(this).datagrid('getColumnOption',
+									fields[i]);
+							col.editor1 = col.editor;
+							if (fields[i] != param.field) {
+								col.editor = null;
+							}
+						}
+						$(this).datagrid('beginEdit', param.index);
+						for (var i = 0; i < fields.length; i++) {
+							var col = $(this).datagrid('getColumnOption',
+									fields[i]);
+							col.editor = col.editor1;
+						}
+					});
+				}
+			});
+		});
+
+		function operate_formatter(value, row, index) {
+			var html = "";
+
+			html += '<a href="javascript:;" class="opt" onclick="findBecome('
+					+ row.bc_id + ');"  i="' + index + '">查看</a>&nbsp;&nbsp;';
+			return html;
+		}
+		function operate_status(value, row, index) {
+			if (row.bc_status == 0) {
+				return "初始录入";
+			}
+			if (row.bc_status == 1) {
+				return "审核中";
+			}
+			if (row.bc_status == 2) {
+				return "正常转正";
+			}
+			if (row.bc_status == 3) {
+				return "延迟转正";
+			}
+			if (row.bc_status == 4) {
+				return "辞退";
+			}
+
+		}
+		//查看历史记录
+		function findBecome(bizid) {
+			$('#history').html("");
+			$
+					.get(
+							'becomehistory.do',
+							{
+								'bizid' : bizid,
+							},
+							function(data) {
+
+								$('#w').window('open');
+								//加载历史记录
+								var dataList = data.dataList;
+								var maps = data.maps;
+								$("#bc_username").val(maps.username);
+								$("#bc_department").val(maps.bc_department);
+								$("#bc_role").val(maps.role_name);
+								$("#bc_sta_date").val(maps.incorporation_date);
+
+								$("#bc_close_time").val(maps.close_time);
+
+								var html = "<tr>";
+								html += "<tr><td class=\"form-label\" style=\"width:60px;\">自我评价：</td>";
+								html += "<td colspan=\"10\"><textarea style=\"width:585px;height:55px\">";
+								html += maps.bc_personal
+										+ "</textarea></td></tr>";
+								for (var i = 0; i < dataList.length; i++) {
+									html += "<td class=\"form-label\" style=\"width:60px;\">"
+											+ dataList[i].userId + ":</td>";
+									html += "<td style=\"width:485px;height:35px\" name=\"evaluate\" id=\"evaluate\" >"
+											+ dataList[i].fullMessage;
+									html += "</td><td>转正待遇</td><td>"
+											+ dataList[i].treatment
+											+ "</td></tr>";
+
+								}
+								$("#history").append(html);
+							});
+		}
+		//取消
+		function btnCancel() {
+			location.href = "pmuserList.do";
+		}
+
+		//撤销新增行
+		function reject(obj) {
+			$(obj).datagrid('rejectChanges');
+			editIndex = undefined;
+		}
+
+		var editIndex = undefined;
+		function endEditing() {
+			if (editIndex == undefined) {
+				return true
+			}
+			if ($("#dg").datagrid('validateRow', editIndex)) {
+				$("#dg").datagrid('endEdit', editIndex);
+				editIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		function endEditing3() {
+			if (editIndex == undefined) {
+				return true
+			}
+			if ($('#dg3').datagrid('validateRow', editIndex)) {
+
+				$('#dg3').datagrid('endEdit', editIndex);
+				editIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		function endEditing4() {
+			if (editIndex == undefined) {
+				return true
+			}
+			if ($('#dg4').datagrid('validateRow', editIndex)) {
+
+				$('#dg4').datagrid('endEdit', editIndex);
+				editIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		function onClickRow(index) {
+			if (editIndex != index) {
+				if (endEditing()) {
+					$('#dg').datagrid('selectRow', index).datagrid('beginEdit',
+							index);
+					editIndex = index;
+				} else {
+					$('#dg').datagrid('selectRow', editIndex);
+				}
+			}
+		}
+		function append() {
+			if (endEditing()) {
+				$('#dg').datagrid('appendRow', {
+					status : 'P'
+				});
+				editIndex = $('#dg').datagrid('getRows').length - 1;
+
+				$('#dg').datagrid('selectRow', editIndex).datagrid('beginEdit',
+						editIndex);
+			}
+		}
+
+		function add3() {
+			if (endEditing3()) {
+				$('#dg3').datagrid('appendRow', {
+					status : 'P'
+				});
+				editIndex = $('#dg3').datagrid('getRows').length - 1;
+
+				$('#dg3').datagrid('selectRow', editIndex).datagrid(
+						'beginEdit', editIndex);
+			}
+		}
+
+		function add4() {
+			if (endEditing4()) {
+				$('#dg4').datagrid('appendRow', {
+					status : 'P'
+				});
+				editIndex = $('#dg4').datagrid('getRows').length - 1;
+
+				$('#dg4').datagrid('selectRow', editIndex).datagrid(
+						'beginEdit', editIndex);
+			}
+		}
+
+		//添加时处理
+		function accept() {
+
+			//校验邮箱
+			if ($("#email").val() != "") {
+				var myReg = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+				if (!myReg.test($("#email").val())) {
+					alert("邮箱格式错咯！");
+					$("#email").focus();
+					return false;
+				}
+			}
+
+			if ($("#center_name").val() == "") {
+				alert("中心不可以为空");
+				return false;
+			}
+
+			var rows = null;
+			if (endEditing()) {
+				$('#dg').datagrid('acceptChanges');
+				rows = $('#dg').datagrid('getRows');
+			}
+
+			var rows3 = null;
+			if (endEditing3()) {
+				$('#dg3').datagrid('acceptChanges');
+				rows3 = $('#dg3').datagrid('getRows');
+			}
+			var rows4 = null;
+			if (endEditing4()) {
+				$('#dg4').datagrid('acceptChanges');
+				rows4 = $('#dg4').datagrid('getRows');
+			}
+			$.post("savePersonalRecords.do?rows="
+					+ encodeURI(JSON.stringify(rows)) + "&rows3="
+					+ encodeURI(JSON.stringify(rows3)) + "&rows4="
+					+ encodeURI(JSON.stringify(rows4)), $("#head").serialize(),
+					function(data) {
+						if (data == "") {
+							alert("保存成功");
+							//location.reload(true);
+							location.href = "personalRecords.do?cid="
+									+ $("#userid").val() + "&department="
+									+ $("#department").val() + "";
+						} else {
+							alert("保存失败");
+						}
+					});
+
+		}
+
+		function onClickCell(index, field) {
+
+			if (endEditing()) {
+				$("#dg").datagrid('selectRow', index).datagrid('editCell', {
+					index : index,
+					field : field
+				});
+				editIndex = index;
+			}
+			if (endEditing3()) {
+				$("#dg3").datagrid('selectRow', index).datagrid('editCell', {
+					index : index,
+					field : field
+				});
+				editIndex = index;
+			}
+			if (endEditing4()) {
+				$("#dg4").datagrid('selectRow', index).datagrid('editCell', {
+					index : index,
+					field : field
+				});
+				editIndex = index;
+			}
+		}
+
+		//删除处理
+		function removeit(Json) {
+			var rows = null;
+			var ids = [];
+			if (Json == "hregister") {
+				rows = $("#dg").datagrid("getSelections");//获取表格数据
+				if (rows.length == 0) {
+					alert("请选择需要删除的行");
+					return null;
+				}
+
+				for (var i = 0; i < rows.length; i++) {
+					ids.push(rows[i].job_id);
+				}
+			} else if (Json == "salary") {
+				rows = $("#dg3").datagrid("getSelections");//获取表格数据
+				if (rows.length == 0) {
+					alert("请选择需要删除的行");
+					return null;
+				}
+
+				for (var i = 0; i < rows.length; i++) {
+					ids.push(rows[i].salary_id);
+				}
+			} else if (Json == "contract") {
+				rows = $("#dg4").datagrid("getSelections");//获取表格数据
+				if (rows.length == 0) {
+					alert("请选择需要删除的行");
+					return null;
+				}
+
+				for (var i = 0; i < rows.length; i++) {
+					ids.push(rows[i].pact_id);
+				}
+			}
+			$.ajax({
+				type : 'POST',
+				url : "deleteContract.do?type=" + Json,
+				data : {
+					'cid' : JSON.stringify(ids),
+				},
+				success : function(data) {
+					alert("删除成功");
+					window.location.reload();
+				}
+			});
+		}
+		/* 引用子页面index1.html */
+		function wen(src) {
+			var hrefs = "<iframe id='son' src='"
+					+ src
+					+ "' allowTransparency='true' style='border:0;width:99%;height:99%;padding-left:2px;' frameBorder='0'></iframe>";
+			$("#centers").html(hrefs);
+			$("#centers").window("open");
+		}
+
+		$('#birth_date')
+				.datebox(
+						{
+							onSelect : function(date) {
+								var d = new Date(date);
+								var Y = new Date().getFullYear();
+								var M = new Date().getMonth() + 1;
+								if (parseInt(Y) - parseInt(d.getFullYear()) < 0
+										|| parseInt(Y)
+												- parseInt(d.getFullYear()) == 0) {
+									alert("请输入正确的时间日期");
+									return false;
+								}
+								if (M > parseInt(d.getMonth() + 1)
+										|| M == parseInt(d.getMonth() + 1)) {//过了生日
+									if (parseInt(new Date().getDate()) > parseInt(d
+											.getDate())) {
+										$("#age")
+												.val(
+														parseInt(Y)
+																- parseInt(d
+																		.getFullYear()));
+									} else {
+										$("#age").val(
+												parseInt(Y)
+														- parseInt(d
+																.getFullYear())
+														- 1);
+									}
+								} else {
+									$("#age").val(
+											parseInt(Y)
+													- parseInt(d.getFullYear())
+													- 1);
+								}
+
+							}
+						});
+	</script>
+</body>
+</html>

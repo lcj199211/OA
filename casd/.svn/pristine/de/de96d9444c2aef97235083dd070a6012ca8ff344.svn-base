@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.finance.SupplierDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+     <!-- 存在时修改 不存在时添加 -->
+    <insert id="saveSupplier" parameterType="com.casd.entity.finance.Supplier">
+        insert into  construct_supplier_table (construct_supplier_id,construct_supplier_name,construct_supplier_addr,construct_supplier_tel,construct_supplier_charger) 
+        VALUES  
+	        (#{construct_supplier_id},#{construct_supplier_name},#{construct_supplier_addr},#{construct_supplier_tel},#{construct_supplier_charger})  
+	        on duplicate key update construct_supplier_id=#{construct_supplier_id},construct_supplier_name=#{construct_supplier_name},
+	    						construct_supplier_addr=#{construct_supplier_addr},construct_supplier_tel=#{construct_supplier_tel}
+	    						,construct_supplier_charger=#{construct_supplier_charger}
+    </insert>
+    
+    <select id="deleSupplier" parameterType="map" >
+        DELETE FROM ${where} WHERE construct_supplier_id IN (${what})  
+    </select>
+    
+        
+    <insert id="add_change_head" useGeneratedKeys="true" keyProperty="id" parameterType="com.casd.entity.finance.Construct_change_head" >
+         insert into  construct_change_head (id,change_price_name,`status`,`describe`,`material_supplierId`) 
+        VALUES  
+	        (#{id},#{change_price_name},#{status},#{describe},#{material_supplierId})  
+	        on duplicate key update id=#{id},change_price_name=#{change_price_name},
+	    						`status`=#{status},`describe`=#{describe},`material_supplierId`=#{material_supplierId}
+    </insert>
+    
+     <update id="updateStatus" parameterType="map" >
+     update construct_change_head set ${filds} where id=${bizId};
+     </update>
+     
+     <select id="findPriceratio" resultType="map" parameterType="map">
+       select ${fields} from ${where} 
+     
+     </select>
+      
+     <update id="new_update_price" parameterType="map">
+      UPDATE construct_change_price SET ${wath}
+    </update>
+      
+  
+</mapper>
+
+

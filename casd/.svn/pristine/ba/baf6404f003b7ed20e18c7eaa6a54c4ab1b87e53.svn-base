@@ -1,0 +1,14 @@
+jdbc.driver=com.mysql.jdbc.Driver
+#jdbc.url=jdbc\:mysql\://113.10.244.109\:6001/yg_data?relaxAutoCommit\=true&zeroDateTimeBehavior\=convertToNull&useUnicode\=true&amp;characterEncoding\=UTF-8
+#jdbc.url=jdbc:mysql://192.168.0.253:3306/yg_081516a?useUnicode=true&amp;characterEncoding=UTF-8
+#jdbc.url=jdbc\:mysql\://192.168.11.121/db?useUnicode\=true&characterEncoding\=UTF-8&allowMultiQueries\=true
+
+jdbc.url=jdbc\:mysql\://localhost/test?useUnicode\=true&characterEncoding\=UTF-8&allowMultiQueries\=true
+#jdbc.user=sql_web
+#jdbc.password=J@298#1gka^988*u2c
+jdbc.user=root
+jdbc.password=1234
+jdbc.initialSize=10
+jdbc.maxActive=100
+jdbc.maxIdle=5
+jdbc.minIdle=2

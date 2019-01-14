@@ -1,0 +1,202 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>首页</title>
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+<style type="text/css">
+fieldset {
+	border: solid 1px #aaa;
+}
+
+.hideFieldset {
+	border-left: 0;
+	border-right: 0;
+	border-bottom: 0;
+}
+
+.hideFieldset .fieldset-body {
+	display: none;
+}
+</style>
+</head>
+<body>
+
+
+	<div style="margin:20px 0;"></div>
+	<div>
+		<table id="data">
+				
+				<tr><td><input type="hidden" name="bc_id" id="bc_id" value="${mpaList.bc_id}"/></td></tr>
+				<tr><td><input type="hidden"  id="taskName" value="${taskName}"/></td></tr>
+				<tr><td><input type="hidden"  id="taskid" value="${taskid}"/></td></tr>
+				<tr>
+					<td  style="width:70px;">姓名：</td>
+					<td  style="width:150px"><input type="text" name="username " id="username" value="${mpaList.username}"/></td>	
+						
+				
+					<td  style="width:70px;">职位：</td>
+					<td  style="width:150px"><input type="text" name="role_name " id="role_name" value="${mpaList.role_name}" readonly="readonly"/></td>	
+				</tr>					
+				<tr>
+					<td class="form-label">试用期：</td>
+					<td><input value="${mpaList.incorporation_date}" class="easyui-datebox" name="incorporation_date" id="incorporation_date"
+						value="" style="width:143px"></td>
+					<td class="form-label">至~：</td>
+					<td><input value="${mpaList.close_time}" class="easyui-datebox" name="close_time" id="close_time"
+					 style="width:143px"></td>			
+				</tr> 
+				<tr>
+					<td style="width:70px;">部门：</td>
+					<td style="width:150px"><input name="bc_department" id="bc_department"
+						 value="${mpaList.bc_department}"/></td>
+					 <td style="width:70px;">试用待遇：</td>
+					<td style="width:150px"><input name="on_trial" id="on_trial"
+						 value="${mpaList.on_trial}"/></td>
+				</tr>
+		</table>
+	</div>
+	<div style="margin:20px 0;"></div>
+	<div>
+	<table><tr><td class="form-label" style="width:70px;">自我评价：</td>
+			<td class="form-label" style="width:70px;" colspan="6">
+			 <textarea id="personal"  style="height:40px; width:400px">${mpaList.bc_personal}</textarea></td>
+	  </tr>
+		<tr>
+			<td class="form-label" style="width:70px;">请选择：</td>
+			<td style="width:150px"><select id="username_id"
+				style="width:120px;">
+					<option value="">请选择审批人</option>
+					<c:forEach items="${userList}" var="user">
+						<option value="${user.userid}">${user.username}</option>
+					</c:forEach>
+			</select></td>
+			<td class="form-label" style="width:70px;">类型：</td>
+			<td style="width:150px"><select id="category" name="category"
+				style="width:120px;">
+	
+					<option value="1">正常转正</option>
+					<option value="2">延迟转正</option>
+					<option value="3">辞退</option>
+
+			</select></td>
+			
+		</tr>
+		<c:if test="${taskName!='当事人'}">
+		<tr><td class="form-label" style="width:70px;">审核意见：</td>
+			<td class="form-label" style="width:70px;" colspan="6">
+			 <textarea id="options"  style="height:40px; width:400px"></textarea></td>
+	  </tr>
+	  </c:if>
+		<tr>
+			<c:if test="${taskName!='当事人'}">
+		<td class="form-label" style="width:70px;">转正后待遇:</td>
+		<td class="form-label" style="width:70px;"><input type="number" id="bc_worker" style="width:78%;height:15px"> </td> 
+		</c:if>
+		<td class="form-label" style="width:70px;"></td>
+		<td><a class="easyui-linkbutton" href="javascript:;"
+				onclick="becomepass();">提交审批</a></td>
+		</tr>
+</table>
+	</div>
+	
+	<div style="margin:20px 0;">
+		<table id="history" bordercolor="#808080"  border="1" cellpadding="0" cellspacing="0" >
+			<c:forEach items="${historyList}" var="mpaList">
+			<tr><td class="form-label" style="width:70px;">${mpaList.username}</td>
+			<td class="form-label" style="width:70px;" colspan="6">
+			 <textarea id="personal"  style="height:40px; width:200px">${mpaList.MESSAGE_}</textarea></td>
+			 <td class="form-label" style="width:70px;" colspan="6">转正待遇</td>
+			 <td><input value="${mpaList.treatment}" style="height:30px; width:120px"></input></td>
+			 </tr>
+       </c:forEach>
+		</table>
+
+
+	</div>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+		/* 	var data = ${data}.data;
+			$('#data').datagrid('loadData', data); */
+			//加载历史记录
+		/* 	var historys = ${history}.history;
+			$('#history').datagrid('loadData', historys); */
+
+		});
+   
+		function becomepass() {
+		
+			var username = $("#username_id").val();//获取审核人
+			var taskName = $("#taskName").val(); //获取节点名称
+			var option = $("#options").val(); //获取审核意见
+			var taskid = $('#taskid').val();
+			var category = $('#category').val();
+			var personal = $('#personal').val();
+			var bc_worker = $('#bc_worker').val();
+			var bc_id = $("#bc_id").val();//获取单据id
+
+			if(taskName=='当事人'){
+				if(personal==''){
+					$.messager.alert("提示", "请填写自我评价");
+					return false;
+				}
+              
+			}
+			
+			if (option == '') {
+				if (taskName != '提交申请' || taskName != '当事人') {
+					$.messager.alert("提示", "请填写审核意见");
+					return false;
+				}
+			}
+			if (username == '') {
+				if (taskName != '董事会') {
+					$.messager.alert("提示", "请选择审核人!");
+					return false;
+				}
+			}
+			if(taskName!='当事人'){
+				if(bc_worker==''){
+					$.messager.alert("提示", "请填写转正待遇");
+					return false;
+				}
+
+			}
+
+			$.post("become_pass.do", {
+				'username' : username,
+				'taskName' : taskName,
+				'option' : option,
+				'taskid' : taskid,
+				'category' : category,
+				'personal' : personal,
+				'bc_worker' : bc_worker,
+				'bc_id' : bc_id,
+				
+			}, function(data) {
+				if (data.Success) {
+					$.messager.alert("启动提示", data.Msg, "info", function() {
+						location.href = "findTaskList.do";
+					});
+
+				} else {
+					$.messager.alert("启动提示", data.Msg, "error");
+				}
+
+			});
+		}
+	</script>
+</body>
+</html>

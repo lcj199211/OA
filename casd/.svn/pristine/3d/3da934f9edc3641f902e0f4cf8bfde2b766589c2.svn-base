@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.PurchaseDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+	<!-- 采购列表 -->
+	<select id="purchaseList" parameterType="map" resultType="map">
+		select ${filds} from ${where} ${limit}
+	</select>
+	<select id="getPurchaseCount" parameterType="map" resultType="int">
+		select COUNT(1) from ${where}
+	</select>
+
+	<!-- 采购材料list -->
+	<select id="purchaseMaterialList" parameterType="map"
+		resultType="map">
+		select * from ${where} ${limit}
+	</select>
+	<select id="getPurchaseMaterialCount" parameterType="map"
+		resultType="int">
+		select COUNT(1) from ${where}
+	</select>
+
+	<!-- 保存 -->
+	<insert id="savePurchaseHead" useGeneratedKeys="true"
+		keyProperty="construct_purchase_id" parameterType="com.casd.entity.construct.PurchaseHead">
+		INSERT INTO construct_purchase_head
+		(
+		construct_purchase_id,construct_purchase_planDate,construct_purchase_arriveDate,construct_purchase_planMan,
+		construct_purchase_reviewer,construct_purchase_supplier,construct_purchase_supplierTel,
+		construct_purchase_projectId,construct_purchase_status,construct_purchase_materialSerId,construct_purchase_materialSerName
+		)
+		VALUES
+		(
+		#{construct_purchase_id},#{construct_purchase_planDate},#{construct_purchase_arriveDate},#{construct_purchase_planMan},
+		#{construct_purchase_reviewer},#{construct_purchase_supplier},#{construct_purchase_supplierTel},
+		#{construct_purchase_projectId},#{construct_purchase_status},#{construct_purchase_materialSerId},#{construct_purchase_materialSerName}
+		)
+		on duplicate key update
+		construct_purchase_id=#{construct_purchase_id},construct_purchase_planDate=#{construct_purchase_planDate},construct_purchase_arriveDate=#{construct_purchase_arriveDate},
+		construct_purchase_planMan=#{construct_purchase_planMan},construct_purchase_reviewer=#{construct_purchase_reviewer},
+		construct_purchase_supplier=#{construct_purchase_supplier},construct_purchase_supplierTel=#{construct_purchase_supplierTel},
+		construct_purchase_projectId=#{construct_purchase_projectId}
+		,construct_purchase_materialSerId=#{construct_purchase_materialSerId},construct_purchase_materialSerName=#{construct_purchase_materialSerName}
+	</insert>
+
+	<insert id="savePurchaseEntry" parameterType="com.casd.entity.construct.PurchaseEntry">
+		INSERT INTO construct_purchase_entry
+		(
+		construct_purchase_entryId,construct_purchase_material,construct_purchase_model,construct_purchase_unit,
+		construct_purchase_quantities,construct_purchase_approvalNum,construct_purchase_applyNum,
+		construct_purchase_contractPrice,construct_purchase_purchasePrice,construct_purchase_purchaseTotal,
+		construct_purchase_parentId,construct_purchase_remarks,construct_purchase_brand,construct_purchase_quantitiesId
+		)
+		VALUES
+		(
+		#{construct_purchase_entryId},#{construct_purchase_material},#{construct_purchase_model},#{construct_purchase_unit},
+		#{construct_purchase_quantities},#{construct_purchase_approvalNum},#{construct_purchase_applyNum},
+		#{construct_purchase_contractPrice},#{construct_purchase_purchasePrice},#{construct_purchase_purchaseTotal}
+		,#{construct_purchase_parentId},#{construct_purchase_remarks},#{construct_purchase_brand},#{construct_purchase_quantitiesId}
+		)
+		on duplicate key update
+		construct_purchase_entryId=#{construct_purchase_entryId},construct_purchase_material=#{construct_purchase_material},
+		construct_purchase_model=#{construct_purchase_model},construct_purchase_unit=#{construct_purchase_unit},
+		construct_purchase_quantities=#{construct_purchase_quantities},construct_purchase_approvalNum=#{construct_purchase_approvalNum},
+		construct_purchase_applyNum=#{construct_purchase_applyNum},construct_purchase_contractPrice=#{construct_purchase_contractPrice},
+		construct_purchase_purchasePrice=#{construct_purchase_purchasePrice},construct_purchase_purchaseTotal=#{construct_purchase_purchaseTotal},
+		construct_purchase_parentId=#{construct_purchase_parentId},construct_purchase_remarks=#{construct_purchase_remarks},
+		construct_purchase_brand=#{construct_purchase_brand},construct_purchase_quantitiesId=#{construct_purchase_quantitiesId}
+	</insert>
+
+
+	<select id="getHead" parameterType="map"
+		resultType="com.casd.entity.construct.PurchaseHead">
+		select * FROM construct_purchase_head WHERE construct_purchase_id = ${id}
+	</select>
+	<select id="getEntry" parameterType="map"
+		resultType="com.casd.entity.construct.PurchaseEntry">
+		select * FROM construct_purchase_entry WHERE construct_purchase_parentId =
+		${id}
+	</select>
+
+	<delete id="delePurchase" parameterType="map">
+		DELETE construct_purchase_entry,construct_purchase_head from ${what}
+	</delete>
+
+
+	<delete id="delePurFlow" parameterType="map">
+		DELETE from flow_audit_table where flow_bill_id=${id}
+	</delete>
+
+	<select id="getPHead" parameterType="map" resultType="map">
+		select ${filds} FROM ${where}
+	</select>
+
+	<select id="getPEntry" parameterType="map" resultType="map">
+		select * FROM construct_purchase_entry where construct_purchase_parentId=
+		${id}
+	</select>
+
+
+	<insert id="savePhc" useGeneratedKeys="true" keyProperty="construct_purchase_id"
+		parameterType="com.casd.entity.construct.PurchaseHeadClass">
+		INSERT INTO construct_purchase_head_class
+		(
+		construct_purchase_id,construct_purchase_planDate,construct_purchase_arriveDate,construct_purchase_planMan,
+		construct_purchase_reviewer,construct_purchase_supplier,construct_purchase_supplierTel,
+		construct_purchase_projectId,construct_purchase_status,construct_purchase_applyId
+		)
+		VALUES
+		(
+		#{construct_purchase_id},#{construct_purchase_planDate},#{construct_purchase_arriveDate},#{construct_purchase_planMan},
+		#{construct_purchase_reviewer},#{construct_purchase_supplier},#{construct_purchase_supplierTel},
+		#{construct_purchase_projectId},#{construct_purchase_status},#{construct_purchase_applyId}
+		)
+	</insert>
+	<insert id="savePec" parameterType="java.util.List">
+		insert into construct_purchase_entry_class
+		(
+		construct_purchase_entryId,construct_purchase_material,construct_purchase_model,construct_purchase_unit,
+		construct_purchase_quantities,construct_purchase_approvalNum,construct_purchase_applyNum,
+		construct_purchase_contractPrice,construct_purchase_purchasePrice,construct_purchase_purchaseTotal,
+		construct_purchase_parentId,construct_purchase_remarks,construct_purchase_brand,construct_purchase_arriveNum,construct_purchase_noArrive
+		)values
+		<foreach collection="list" item="pur" index="index" separator=",">
+			(
+			#{pur.construct_purchase_entryId},#{pur.construct_purchase_material},#{pur.construct_purchase_model},#{pur.construct_purchase_unit},
+			#{pur.construct_purchase_quantities},#{pur.construct_purchase_approvalNum},#{pur.construct_purchase_applyNum},
+			#{pur.construct_purchase_contractPrice},#{pur.construct_purchase_purchasePrice},#{pur.construct_purchase_purchaseTotal}
+			,#{pur.construct_purchase_parentId},#{pur.construct_purchase_remarks},#{pur.construct_purchase_brand},#{pur.construct_purchase_arriveNum},#{pur.construct_purchase_noArrive}
+			)
+		</foreach>
+	</insert>
+
+
+	<update id="updateBillStatus" parameterType="map">
+
+		update construct_purchase_head set construct_purchase_status=${status} where construct_purchase_id=${billID};
+
+	</update>
+
+	<update id="updateBill" parameterType="map">
+
+		<!-- update construct_purchase_head set photo = #{filds} where construct_purchase_id=#{billID} -->
+		update construct_purchase_head set ${filds} where construct_purchase_id=${billID};
+
+	</update>
+
+
+	<update id="updatephoto" parameterType="map">
+		update construct_purchase_head set photo = #{filds} where construct_purchase_id=#{billID}
+	</update>
+	
+	<delete id="delete" parameterType="map">
+	
+		DELETE from ${where}
+	</delete>
+
+</mapper>

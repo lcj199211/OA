@@ -1,0 +1,79 @@
+package com.casd.entity.manage;
+
+import java.io.Serializable;
+
+public class Reqfunds implements Serializable {
+
+	/**
+	 * 收款进度
+	 */
+	private static final long serialVersionUID = -3767021020385414183L;
+	
+	private int manage_reqfunds_id; 				//id 
+	private int manage_reqfunds_contractId;			//合同id
+	private String manage_reqfunds_time;			//请款时间
+	private Double manage_reqfunds_amount;			//请款金额
+	private String manage_reqfunds_ticketDate;		//开票日期
+	private Double manage_reqfunds_ticketAmount;	//开票金额
+	private String manage_reqfunds_receiveDate;		//收款日期
+	private Double manage_reqfunds_receiveAmount;	//收款金额
+	private String manage_reqfunds_remark;			//备注
+	public int getManage_reqfunds_id() {
+		return manage_reqfunds_id;
+	}
+	public void setManage_reqfunds_id(int manage_reqfunds_id) {
+		this.manage_reqfunds_id = manage_reqfunds_id;
+	}
+	public int getManage_reqfunds_contractId() {
+		return manage_reqfunds_contractId;
+	}
+	public void setManage_reqfunds_contractId(int manage_reqfunds_contractId) {
+		this.manage_reqfunds_contractId = manage_reqfunds_contractId;
+	}
+	public String getManage_reqfunds_time() {
+		return manage_reqfunds_time;
+	}
+	public void setManage_reqfunds_time(String manage_reqfunds_time) {
+		this.manage_reqfunds_time = manage_reqfunds_time;
+	}
+	public Double getManage_reqfunds_amount() {
+		return manage_reqfunds_amount;
+	}
+	public void setManage_reqfunds_amount(Double manage_reqfunds_amount) {
+		this.manage_reqfunds_amount = manage_reqfunds_amount;
+	}
+	public String getManage_reqfunds_ticketDate() {
+		return manage_reqfunds_ticketDate;
+	}
+	public void setManage_reqfunds_ticketDate(String manage_reqfunds_ticketDate) {
+		this.manage_reqfunds_ticketDate = manage_reqfunds_ticketDate;
+	}
+	public Double getManage_reqfunds_ticketAmount() {
+		return manage_reqfunds_ticketAmount;
+	}
+	public void setManage_reqfunds_ticketAmount(Double manage_reqfunds_ticketAmount) {
+		this.manage_reqfunds_ticketAmount = manage_reqfunds_ticketAmount;
+	}
+	public String getManage_reqfunds_receiveDate() {
+		return manage_reqfunds_receiveDate;
+	}
+	public void setManage_reqfunds_receiveDate(String manage_reqfunds_receiveDate) {
+		this.manage_reqfunds_receiveDate = manage_reqfunds_receiveDate;
+	}
+	public Double getManage_reqfunds_receiveAmount() {
+		return manage_reqfunds_receiveAmount;
+	}
+	public void setManage_reqfunds_receiveAmount(
+			Double manage_reqfunds_receiveAmount) {
+		this.manage_reqfunds_receiveAmount = manage_reqfunds_receiveAmount;
+	}
+	public String getManage_reqfunds_remark() {
+		return manage_reqfunds_remark;
+	}
+	public void setManage_reqfunds_remark(String manage_reqfunds_remark) {
+		this.manage_reqfunds_remark = manage_reqfunds_remark;
+	}
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+}

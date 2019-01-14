@@ -1,0 +1,82 @@
+package com.casd.serviceimpl.manage;
+
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.impl.pvm.process.ActivityImpl;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.controller.web.utils.SendmailUtil;
+import com.casd.dao.flow.FlowDao;
+import com.casd.dao.manage.AchReviewDao;
+import com.casd.dao.ownCenter.LeaveDao;
+import com.casd.dao.uc.UserDao;
+import com.casd.entity.flow.FlowAudit;
+import com.casd.entity.manage.AchReview;
+import com.casd.entity.ownCenter.Leave;
+import com.casd.entity.uc.User;
+import com.casd.service.flow.FlowService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.manage.AchReviewService;
+import com.casd.service.ownCenter.LeaveService;
+
+@Service
+public class AchReviewServiceImpl implements AchReviewService {
+	@Autowired
+	private AchReviewDao achReviewDao;
+
+	@Override
+	public List<Map<String, Object>> achReviewList(int page, int pageSize,
+			Ref<Integer> record, String fields, String where) {
+		// TODO Auto-generated method stub
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", fields);
+		param.put("where", where);
+
+		if (record != null) {
+			Integer count = achReviewDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return achReviewDao.getList(param);
+	}
+
+	@Override
+	public void save_achReview(AchReview achReview) {
+		// TODO Auto-generated method stub
+		achReviewDao.save_achReview(achReview);
+	}
+
+	@Override
+	public List<Map<String, Object>> getData(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		Map<String, Object> daoMap=new HashMap<String, Object>();
+		daoMap.put("fields", "*");
+		daoMap.put("where", " manage_achreview where achReview_id="+map.get("achReview_id")+"");
+		return achReviewDao.getData(daoMap);
+	}
+
+	@Override
+	public void delete_data(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		achReviewDao.delete_data(map);
+	}
+
+}

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.uc.CostappDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+    <insert id="save_costapp"  useGeneratedKeys="true" keyProperty="costapp_id" parameterType="com.casd.entity.uc.Costapp">
+   		
+   		INSERT INTO uc_costapp  (costapp_id,costapp_company,costapp_appitem,costapp_amount,
+   		costapp_application,costapp_majoyview,costapp_managerview,costapp_chairmanview,costapp_financeview,costapp_status,costapp_time,userid) 
+        VALUES (#{costapp_id},#{costapp_company},#{costapp_appitem},#{costapp_amount},
+        #{costapp_application},#{costapp_majoyview},#{costapp_managerview},#{costapp_chairmanview},#{costapp_financeview},#{costapp_status},
+        #{costapp_time},#{userid})
+   		on duplicate key update costapp_id=#{costapp_id},costapp_company=#{costapp_company},
+	    						costapp_appitem=#{costapp_appitem},costapp_amount=#{costapp_amount},
+	    						costapp_application=#{costapp_application},costapp_majoyview=#{costapp_majoyview},
+	    						costapp_managerview=#{costapp_managerview},costapp_chairmanview=#{costapp_chairmanview},
+	    						costapp_financeview=#{costapp_financeview}
+   </insert>  
+   <select id="getData" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+   <delete id="delete_data" parameterType="map">
+       DELETE FROM   ${where}
+    </delete> 
+    
+    <select id="findCostapp" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+	 <update id="updateCostapp" parameterType="com.casd.entity.uc.Costapp">
+          update uc_costapp 
+          <set>
+        	
+         	<if test="costapp_appitem!=null">
+         		costapp_appitem=#{costapp_appitem},
+         	</if>
+         	<if test="costapp_company!=null">
+         		costapp_company=#{costapp_company},
+         	</if>
+         	<if test="costapp_amount!=null">
+         		costapp_amount=#{costapp_amount},
+         	</if>
+         	<if test="costapp_application!=null">
+         		costapp_application=#{costapp_application},
+         	</if>
+         	<if test="costapp_majoyview != null">
+         		costapp_majoyview=#{costapp_majoyview},
+         	</if>
+         	<if test="costapp_managerview!=null">
+         		costapp_managerview=#{costapp_managerview},
+         	</if>
+         	<if test="costapp_chairmanview!=null">
+         		costapp_chairmanview=#{costapp_chairmanview},
+         	</if>
+         	<if test="costapp_financeview!=null">
+         		costapp_financeview=#{costapp_financeview},
+         	</if>
+         	<if test="costapp_assistant!=null">
+         		costapp_assistant=#{costapp_assistant},
+         	</if>
+         	<if test="costapp_status != 0">
+         		costapp_status=#{costapp_status}
+         	</if>
+         		
+        </set>
+        where costapp_id=#{costapp_id}
+    </update>
+    
+    <update id="updateAuditor">
+    	update uc_costapp set ${what}
+    
+    </update>
+    
+   
+</mapper>

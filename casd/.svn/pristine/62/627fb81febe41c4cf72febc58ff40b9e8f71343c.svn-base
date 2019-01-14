@@ -1,0 +1,19 @@
+package com.casd.dao.finance;
+
+import java.util.List;
+import java.util.Map;
+
+import com.casd.entity.finance.Material;
+import com.casd.entity.finance.MaterialModel;
+import com.casd.entity.finance.Supplier;
+
+
+
+public interface SupplierDao {
+
+	void saveSupplier(Supplier supplier);
+
+	void deleSupplier(Map<String, Object> map);
+
+
+}

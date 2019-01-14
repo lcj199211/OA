@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.supplierMod.WorkerDao">
+   
+   
+   <insert id="save_Worker" useGeneratedKeys="true" keyProperty="own_seal_id" parameterType="com.casd.entity.supplierMod.Worker">
+   		
+   		INSERT INTO suppliermod_worker_table  (supplierMod_worker_id,supplierMod_worker_projectId,supplierMod_worker_workTeamId,supplierMod_worker_userId,
+   		supplierMod_worker_remarks) 
+        VALUES (#{supplierMod_worker_id},#{supplierMod_worker_projectId},#{supplierMod_worker_workTeamId},#{supplierMod_worker_userId},
+        #{supplierMod_worker_remarks})
+   		on duplicate key update supplierMod_worker_id=#{supplierMod_worker_id},supplierMod_worker_projectId=#{supplierMod_worker_projectId},
+	    						supplierMod_worker_workTeamId=#{supplierMod_worker_workTeamId},supplierMod_worker_userId=#{supplierMod_worker_userId},
+	    						supplierMod_worker_remarks=#{supplierMod_worker_remarks}
+   </insert> 
+   
+	<select id="checkWorkerExist" parameterType="java.lang.String" resultType="java.lang.Boolean">
+    <![CDATA[ select count(supplierMod_worker_id) 
+        from suppliermod_worker_table where supplierMod_worker_userId = #{supplierMod_worker_userId}]]>
+  	</select>       
+   
+   <insert id="workerApply" useGeneratedKeys="true" keyProperty="suppliermod_worker_apply_id" parameterType="com.casd.entity.supplierMod.WorkerApply">
+   		
+   		INSERT INTO suppliermod_worker_apply  (suppliermod_worker_apply_id,suppliermod_worker_apply_userId,suppliermod_worker_apply_reason,suppliermod_worker_apply_proId,
+   		suppliermod_worker_apply_status,suppliermod_worker_apply_creatTime,suppliermod_worker_apply_oldProId) 
+        VALUES (#{suppliermod_worker_apply_id},#{suppliermod_worker_apply_userId},#{suppliermod_worker_apply_reason},#{suppliermod_worker_apply_proId},
+        #{suppliermod_worker_apply_status},#{suppliermod_worker_apply_creatTime},#{suppliermod_worker_apply_oldProId})
+   		on duplicate key update suppliermod_worker_apply_id=#{suppliermod_worker_apply_id},suppliermod_worker_apply_userId=#{suppliermod_worker_apply_userId},
+	    						suppliermod_worker_apply_reason=#{suppliermod_worker_apply_reason},suppliermod_worker_apply_proId=#{suppliermod_worker_apply_proId},
+	    						suppliermod_worker_apply_status=#{suppliermod_worker_apply_status},suppliermod_worker_apply_creatTime=#{suppliermod_worker_apply_creatTime},
+   								suppliermod_worker_apply_oldProId=#{suppliermod_worker_apply_oldProId}
+   								
+   </insert> 
+   
+   
+</mapper>

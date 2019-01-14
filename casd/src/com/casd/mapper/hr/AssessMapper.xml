@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.hr.AssessDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+    
+    <select id="isExistEva" parameterType="string" resultType="boolean">
+         select count(evaluator_id) from assess_evaluator_table where evaluator=#{userName}  and status=1
+    </select>
+    
+    <select id="initAssessEntry"  resultType="map">
+         select * from assess_table order by assess_category;
+    </select>
+    
+    <insert id="saveAssessHead" useGeneratedKeys="true" keyProperty="assess_head_id" parameterType="com.casd.entity.hr.AssessHead">  
+		insert into assess_head_table (assess_head_id,assess_head_name,assess_head_position,assess_head_department,assess_head_company,assess_head_totalscore,assess_head_evaluator,assess_head_creatdate) 
+		values (0,#{assess_head_name},#{assess_head_position},#{assess_head_department},#{assess_head_company},#{assess_head_totalscore},#{assess_head_evaluator},#{assess_head_creatdate}) 
+	</insert>
+    
+    <insert id="saveAssessEntry" parameterType="list" >
+       insert into assess_entry_table (
+            assess_entry_id,
+            assess_parent_id,
+            assess_entry_content,
+            assess_entry_score
+       )values  
+       <foreach collection="list" item="entry"  separator="," >
+        	(0,
+         #{entry.assess_parent_id},
+         #{entry.assess_entry_content},
+         #{entry.assess_entry_score})
+         </foreach>
+	</insert>
+    
+    <select id="assessList" parameterType="map" resultType="map">
+		select *
+		from ${where} ${limit}
+	</select>
+	<select id="getAssessCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	
+    <select id="getAssessEntry" parameterType="map" resultType="map">
+		select a.assess_id,a.assess_content,a.assess_grade,a.assess_deduct,a.assess_category,e.assess_entry_score from assess_table a
+		LEFT JOIN assess_entry_table e on e.assess_entry_content=a.assess_content where assess_parent_id=${id}
+	</select>
+    
+    <select id="getAssessHead" parameterType="map" resultType="com.casd.entity.hr.AssessHead">
+		select *  from assess_head_table where assess_head_id=${id}
+	</select>
+    
+    <!-- 开启评估 -->
+    <update id="startAssess">
+    	update assess_evaluator_table set status=1
+    </update>
+    
+    <!-- 停止评估 -->
+    <update id="stopAssess">
+    	update assess_evaluator_table set status=2
+    </update>
+    
+    <!-- 评估人 -->
+    <select id="initEva" resultType="map">
+    	select * from assess_evaluator_table
+    </select>
+    <!-- 评估内容 -->
+    <select id="initCont" resultType="map">
+    	select * from assess_table
+    </select>
+    <!-- 评估内容 不存在就插入存在就保存 -->
+    <insert id="saveCont" parameterType="com.casd.entity.hr.Assess">
+    	insert into assess_table (assess_id,assess_content,assess_grade,assess_deduct,assess_score,assess_category) VALUES  
+	        (#{assess_id},#{assess_content},#{assess_grade},#{assess_deduct},#{assess_score},#{assess_category})  
+	    on duplicate key update assess_id=#{assess_id},assess_content=#{assess_content},
+	    						assess_grade=#{assess_grade},assess_deduct=#{assess_deduct},
+	    						assess_score=#{assess_score},assess_category=#{assess_category}
+    </insert>
+    
+    <delete id="delectCont" parameterType="map">
+    	    DELETE FROM assess_table WHERE assess_id IN (${what})  
+    </delete>
+    
+    <!-- 评估人 不存在就插入存在就保存 -->
+    <insert id="saveEva" parameterType="com.casd.entity.hr.AssessEva">
+    	insert into assess_evaluator_table (evaluator_id,evaluator,status) VALUES  
+	        (#{evaluator_id},#{evaluator},#{status} )
+	    on duplicate key update evaluator_id=#{evaluator_id},evaluator=#{evaluator},
+	    						status=#{status}
+    </insert>
+    
+    
+    <delete id="delectEva" parameterType="map">
+    	    DELETE FROM assess_evaluator_table WHERE evaluator_id IN (${what})  
+    </delete>
+    
+    <delete id="delectData" parameterType="map">
+    	    DELETE FROM assess_head_table WHERE assess_head_id IN (${what})  
+    </delete>
+    
+    
+</mapper>

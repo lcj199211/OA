@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.finance.WagesDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+     <!-- 存在时修改 不存在时添加 -->
+    <insert id="save_userWages" parameterType="com.casd.entity.finance.Wages">
+        insert into  finance_wages_table (finance_wages_id,finance_wages_name,finance_wages_company,finance_wages_center,finance_wages_dep,
+        finance_wages_attCount,finance_wages_vacaCount,finance_wages_leaveCount,finance_wages_base,finance_wages_post,finance_wages_achieve,
+        finance_wages_subsidy,finance_wages_socSec,finance_wages_accFund,finance_wages_wages,finance_wages_tax,finance_wages_dedu,finance_wages_yearMon,finance_wages_baseTotal
+        ) 
+        VALUES  
+	        (#{finance_wages_id},#{finance_wages_name},#{finance_wages_company},#{finance_wages_center},#{finance_wages_dep},
+	        #{finance_wages_attCount},#{finance_wages_vacaCount},#{finance_wages_leaveCount},#{finance_wages_base},#{finance_wages_post},
+	        #{finance_wages_achieve},#{finance_wages_subsidy},#{finance_wages_socSec},#{finance_wages_accFund},#{finance_wages_wages},
+	        #{finance_wages_tax},#{finance_wages_dedu},#{finance_wages_yearMon},#{finance_wages_baseTotal}
+	        )  
+	      <!--   on duplicate key update construct_supplier_id=#{construct_supplier_id},construct_supplier_name=#{construct_supplier_name},
+	    						construct_supplier_addr=#{construct_supplier_addr},construct_supplier_tel=#{construct_supplier_tel}
+	    						,construct_supplier_charger=#{construct_supplier_charger} -->
+    </insert>
+    
+    
+    <select id="base_Wages" parameterType="int" resultType="map">
+		select *  from uc_wage where uc_wage_userId= #{uc_wage_userId} 
+	</select>
+    
+     
+     
+      <insert id="submitWages" parameterType="com.casd.entity.finance.Base_wages">
+        insert into  uc_wage (uc_wage_id,uc_wage_userId,uc_wage_base,uc_wage_post,uc_wage_achieve,
+        uc_wage_subsidy,uc_wage_socSec,uc_wage_accFund
+        ) 
+        VALUES  
+	        (#{uc_wage_id},#{uc_wage_userId},#{uc_wage_base},#{uc_wage_post},#{uc_wage_achieve},
+	        #{uc_wage_subsidy},#{uc_wage_socSec},#{uc_wage_accFund}
+	        )  
+	    on duplicate key update uc_wage_id=#{uc_wage_id},uc_wage_userId=#{uc_wage_userId},
+	    						uc_wage_base=#{uc_wage_base},uc_wage_post=#{uc_wage_post}
+	    						,uc_wage_achieve=#{uc_wage_achieve},uc_wage_subsidy=#{uc_wage_subsidy}
+	    						,uc_wage_socSec=#{uc_wage_socSec},uc_wage_accFund=#{uc_wage_accFund}
+	    						
+    </insert>
+  
+  
+  	<delete id="dele_userWages" parameterType="int" >
+  		DELETE FROM finance_wages_table where finance_wages_id=#{finance_wages_id}
+  	
+  	</delete>
+  
+  
+</mapper>
+
+

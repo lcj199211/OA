@@ -1,0 +1,505 @@
+package com.casd.controller.ownCenter;
+
+import java.io.File;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONObject;
+
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Comment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.flow.FlowAudit;
+import com.casd.entity.ownCenter.Leave;
+import com.casd.entity.uc.User;
+import com.casd.service.flow.FlowService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.ownCenter.LeaveService;
+import com.casd.service.uc.RoleService;
+import com.casd.service.uc.UserService;
+
+@Controller
+@RequestMapping("/admin")
+public class LeaveController {
+
+	@Autowired
+	private FlowService flowService;
+	@Autowired
+	private LeaveService leaveService;
+	@Autowired
+	private UserService userService;
+	@Autowired
+	private RoleService roleService;
+	@Autowired
+	private ActivitiService activitiService;	
+	@Autowired
+	private RuntimeService runtimeService;
+
+	/**
+	 * 请假记录表
+	 */
+	@RequestMapping(value = "/leaveList", method = RequestMethod.GET)
+	public ModelAndView leaveList() {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("personManagem/leaveList");
+		return mv;
+	}
+
+	@RequestMapping(value = "/leaveList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> leaveList(HttpServletRequest request) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		StringBuffer finds = new StringBuffer();
+       
+	    finds.append("*,(SELECT SUM(day_count) FROM own_leave_table where 1=1");
+		String start_time = request.getParameter("start_time");
+		String end_time = request.getParameter("end_time");
+		String department = request.getParameter("department");
+		String applicant = request.getParameter("applicant");
+		String status = request.getParameter("status");
+		String leave_category = request.getParameter("leave_category");
+	
+		sbf.append("own_leave_table a ");
+		sbf.append("LEFT JOIN uc_company b on a.department=b.company_id where 1=1");
+		SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd");
+		if (StringUtils.hasText(start_time)) {
+			java.util.Date start_timeDate = format.parse(start_time);
+			Date startDate = new Date(start_timeDate.getTime());
+			sbf.append(" and start_time >='" + startDate + "'");
+			finds.append(" and start_time >='" + startDate + "'");		
+		}
+		if (StringUtils.hasText(end_time)) {
+			java.util.Date end_timeDate = format.parse(end_time);
+			Date endDate = new Date(end_timeDate.getTime());
+			sbf.append(" and end_time <= '" + endDate + "'");
+			finds.append(" and end_time <= '" + endDate + "'");
+			
+		}
+		if (StringUtils.hasText(department)) {
+			sbf.append(" and b.company_name like '%" + department + "%'");
+			finds.append(" and b.company_name like '%" + department + "%'");
+		
+		}
+		if (StringUtils.hasText(applicant)) {
+			sbf.append(" and applicant = '" + applicant + "'");
+			finds.append(" and applicant = '" + applicant + "'");
+		
+		}
+		if (StringUtils.hasText(status)) {
+			sbf.append(" and status = " + status + "");
+			finds.append(" and status = " + status + "");
+		}
+		if (StringUtils.hasText(leave_category)) {
+			sbf.append(" and leave_category =" +leave_category +"");
+			finds.append(" and leave_category =" +leave_category + "");
+		}
+		sbf.append(" order by id desc");
+		finds.append(") sumday");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+    
+		List<Map<String, Object>> data = leaveService.leaveList(pageIndex,
+				pageSize, record, finds.toString(),sbf.toString());
+	      double sumday=0.0;
+			List<Map<String, Object>> datas =new ArrayList<Map<String,Object>>();
+			Map<String, Object> footMap = new HashMap<String, Object>();
+			footMap.put("id", "合计");
+		if (data.size()>0) {
+				sumday=	Double.parseDouble(data.get(0).get("sumday").toString());
+		}
+	
+	
+		footMap.put("day_count",sumday);
+	    datas.add(footMap);	
+		json.put("footer", datas);
+		json.put("isFooter",true);
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+
+	/**
+	 * 填写请假条页面
+	 * 
+	 * @throws Exception
+	 */
+
+	@RequestMapping(value = "/leave", method = RequestMethod.GET)
+	public ModelAndView leave(HttpServletRequest request, Model mode)
+			throws Exception {
+		ModelAndView mv = new ModelAndView();
+
+		User loginUser = (User) request.getSession().getAttribute("loginUser");
+		String fields = "a.username,b.role_name,c.center_companyId";
+
+		StringBuffer sbf = new StringBuffer();
+		sbf.append("uc_user a JOIN uc_role b ON a.role_id=b.role_id");
+		sbf.append(" JOIN uc_center c ON c.center_id=a.center_id");
+		sbf.append(" where a.userid=" + loginUser.getUserid());
+		List<Map<String, Object>> list = userService.queryId(fields,
+				sbf.toString());
+		Leave leave = new Leave();
+		  List<Map<String, Object>> userList=new ArrayList<Map<String,Object>>();
+		for (Map<String, Object> map : list){
+			leave.setApplicant(map.get("username").toString());
+			leave.setPosition(map.get("role_name").toString());
+			leave.setDepartment(map.get("center_companyId").toString());
+		}
+	  String position=leave.getPosition();
+		 if(position.indexOf("总经理")!=-1 || position.indexOf("董事长助理")!=-1){
+			 userList =leaveService.financialcheck(); //查询管理公司总经理
+ 	       }else if(position.indexOf("经理")!=-1) {
+ 	    	  userList =leaveService.manageraAudit();//查询总经理
+		   }else {
+			   userList =leaveService.fidbusiness();//查询经理
+		}
+		mv.addObject("userList", userList);
+		mv.addObject("leave", leave);
+		mv.setViewName("personManagem/leave");
+		return mv;
+	}
+
+
+	/**
+	 * 提交请假申请
+	 */
+	@RequestMapping(value = "save_Leave", method = RequestMethod.POST)
+	@ResponseBody
+	private Map<String, Object> submitLeave(MultipartFile leaveFile,Leave leave,
+			HttpServletRequest request) {
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			// 获取原始文件名		
+			String timeStr = "";
+			String fileName = leaveFile.getOriginalFilename();
+			if (!fileName.equals("")) {
+				if (StringUtils.isEmpty(fileName)) {
+					json.put("Success", false);
+					json.put("Msg", "请选择要导的文件");
+					return json;
+				}
+
+				File file2 = new File("E:/file/casd/leaveFile");
+				if (!file2.exists()) {
+					file2.mkdirs();
+				}
+				// 定义文件路径
+				String fileUploadBasePath = "E:/file/casd/leaveFile/";
+				timeStr = System.currentTimeMillis() + fileName;
+				String newFilePath = fileUploadBasePath + timeStr;
+				File newFile = new File(newFilePath);
+				leaveFile.transferTo(newFile); // 写入文件到服务器目录
+				leave.setLeaveFile_name(timeStr);
+			 }
+			
+            java.util.Date utilDate=new java.util.Date();
+            java.sql.Date sqlDate=new java.sql.Date(utilDate.getTime());
+            leave.setCreatedate(sqlDate);           
+			leaveService.saveLeave(leave);
+			String nextUser= request.getParameter("nextUser");
+			String position= leave.getPosition();
+				String processDefinitioKey = "Leave_flow"; // 定义流程的key,不可修改
+				String title = "请假申请"; // 请注意
+				String bizId = processDefinitioKey + "."
+						+ leave.getId(); // 获取业务id
+				Map<String, Object> vars = new HashMap<String, Object>();
+				if(position.indexOf("总经理")!=-1 ||position.indexOf("董事长助理")!=-1){
+					vars.put("mg","总经理");	
+					vars.put("glgs", nextUser);		
+				}else if(position.indexOf("经理")!=-1){
+					vars.put("mg", "经理");	
+					vars.put("zjl", nextUser);
+
+				}else {
+					vars.put("mg", "true");	
+					vars.put("jl", nextUser);
+				 }
+				 vars.put("title", title); // 任务类型
+				 runtimeService.startProcessInstanceByKey(
+						processDefinitioKey, bizId, vars);// 流程图id，业务表id
+				    json.put("Success", true);
+					json.put("Msg", "已提交!");
+				} catch (Exception e) {
+					e.printStackTrace();
+					json.put("Success", false);
+					json.put("Msg", "程序出错,请联系技术员");
+			    	}		
+		       return json;
+	}
+
+	/**
+	 * 跳转到请假条审核界面 leaveAudit.jsp
+	 * 
+	 * @throws Exception
+	 */
+
+	@RequestMapping(value = "/leaveAudit", method = RequestMethod.GET)
+	public ModelAndView leaveAudit(HttpServletRequest request, Model model)
+			throws Exception {
+		ModelAndView mv = new ModelAndView();
+
+		String taskid = request.getParameter("taskid");// 获取任务id
+
+		String bizkey = activitiService.getBusinessBizId(taskid);// 获取业务编号
+
+		String[] strs = bizkey.split("\\.");
+		String bizId = null; // 业务编号
+		for (int i = 0, len = strs.length; i < len; i++) {
+			bizId = strs[i].toString();
+		}
+	/*	Map<String, Object> map = new HashMap<String, Object>();
+
+		map.put("id", bizId);
+		Leave leave = leaveService.findLeaveByID(map);*/
+		
+		String where="own_leave_table a LEFT JOIN uc_company b on a.department=b.company_id";
+		where+=" where id="+bizId;
+		Map<String, Object> leave= userService.queryUserById("*", where);
+		mv.addObject("leave", leave);
+
+		String taskName = request.getParameter("taskName");
+        String day =leave.get("day_count").toString();
+        String position =leave.get("position").toString();
+		List<Map<String, Object>> userList = leaveService.usertask(taskid,
+				position,day);// 查看审核人
+
+		List<String> bot = activitiService.findOutComeListByTaskId(taskid);// 查看当前有几条线
+
+		if (bot.size() > 1 && bot.size() <3) {
+			if (taskName.equals("人事存档")) {
+				model.addAttribute("bot", "申请批准");
+			}else {
+				model.addAttribute("bot", "申请批准");
+				model.addAttribute("both", "不批准");
+			}
+			
+		} else {
+			model.addAttribute("bot", "批准");
+		}
+
+		List<Map<String, Object>> historyList = activitiService.getProcessComments(taskid);// 查询审批记录
+
+	
+	/*	for (Comment history : comments) {
+			Map<String, Object> vars = new HashMap<String, Object>();
+
+			vars.put("userId", history.getUserId()); // 审核人
+			vars.put("fullMessage", history.getFullMessage()); // 审核意见
+			historyList.add(vars);
+
+		}*/
+		// 审核历史意见
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("history", historyList);
+		model.addAttribute("history", jsonObject);
+
+		mv.addObject("userList", userList);
+
+		
+		mv.addObject("taskid", taskid);
+		mv.addObject("taskName", taskName);
+		mv.setViewName("personManagem/leaveAudit");
+		return mv;
+	}
+
+	/**
+	 * 跳转查看界面
+	 * @throws Exception 
+	 */
+
+	@RequestMapping(value = "/Leave_flow", method = RequestMethod.GET)
+	@ResponseBody
+	public ModelAndView leaveView(HttpServletRequest request, Model model) throws Exception {
+		ModelAndView mv = new ModelAndView();
+
+		int bill_id = Integer.parseInt(request.getParameter("bizId").toString());
+
+		
+		
+		// 查询请假信息
+		/*Map<String, Object> map = new HashMap<String, Object>();
+		map.put("id", bill_id);*/
+		String where="own_leave_table a LEFT JOIN uc_company b on a.department=b.company_id";
+		where+=" where id="+bill_id;
+		Map<String, Object> leave= userService.queryUserById("*", where);
+	//	Leave leave = leaveService.findLeaveByID(map);
+		mv.addObject("leave", leave);
+
+		String bizId = String.valueOf(bill_id);
+		String beyId = "Leave_flow"; // 流程实例key 请勿改动
+
+		List<Map<String, Object>> historyList = activitiService.viewHisComments(bizId, beyId);
+		//审核历史意见
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("history", historyList);
+		model.addAttribute("history", jsonObject);
+		
+	
+		mv.setViewName("personManagem/leaveView");
+		return mv;
+	}
+
+	/**
+	 * 请假条删除
+	 */
+	@RequestMapping(value = "/deleLeave", method = RequestMethod.POST)
+	@ResponseBody
+	public String deleLeave(HttpServletRequest request, Model model) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		String leaveId = request.getParameter("leaveId");
+		String leaveFile_name = request.getParameter("leaveFile_name");
+		File file2 = new File("E:/file/casd/leaveFile/"+leaveFile_name);
+		if (file2.exists()) {
+			file2.delete();
+		}
+		map.put("what", leaveId);
+		map.put("where", "own_leave_table");
+		leaveService.deleLeave(map);
+		return null;
+	}
+
+
+
+	/**
+	 * 个人中心的请假list
+	 */
+	@RequestMapping(value = "/leavePersonal", method = RequestMethod.GET)
+	public ModelAndView leavePersonal(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("personManagem/leavePersonal");
+		return mv;
+	}
+
+	@RequestMapping(value = "/leavePersonal", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> leavePersonal(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		User loginUser = (User) request.getSession().getAttribute("loginUser");
+		String username = loginUser.getUsername();
+		String  finds="*";
+		sbf.append(" own_leave_table where applicant='" + username + "'");
+
+		String start_time = request.getParameter("start_time");
+		String end_time = request.getParameter("end_time");
+
+		SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd");
+		if (StringUtils.hasText(start_time)) {
+			java.util.Date start_timeDate = format.parse(start_time);
+			Date startDate = new Date(start_timeDate.getTime());
+			sbf.append(" and start_time >='" + startDate + "'");
+		}
+		if (StringUtils.hasText(end_time)) {
+			java.util.Date end_timeDate = format.parse(end_time);
+			Date endDate = new Date(end_timeDate.getTime());
+			sbf.append(" and end_time <= '" + endDate + "'");
+		} 
+		sbf.append(" order by id desc");
+
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = leaveService.leaveList(pageIndex,
+				pageSize, record,finds, sbf.toString());
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+
+	/**
+	 * 请假条审核通过
+	 * 
+	 * @throws Exception
+	 * */
+	@RequestMapping(value = "/leave_pass", method = RequestMethod.POST)
+	@ResponseBody
+	public Object leave_pass(HttpServletRequest request)
+			throws Exception {
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			
+			json=leaveService.leave_pass(request);
+			json.put("Success", true);
+			json.put("Msg", "已审核!");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "程序出错,请联系技术员");
+		}
+
+		return json;
+
+	}
+/*
+	*//**
+	 * 启动流程
+	 * *//*
+	@RequestMapping(value = "/start_leave", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> start_leave(HttpServletRequest request){
+
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			
+			User user = (User) request.getSession().getAttribute("loginUser");
+			String name = user.getUserid()+"";// 获取申请人
+			String processDefinitioKey = "Leave_flow"; // 定义流程的key,不可修改
+			String title = "请假申请"; // 请注意
+			String bizId = processDefinitioKey + "."
+					+ request.getParameter("leaveId"); // 获取业务id
+			activitiService.startProcesses(bizId, name, processDefinitioKey,
+					title);
+			json.put("Success", "启动成功,请审核！");
+		} catch (Exception e) {
+			json.put("Msg", "启动失败,请联系技术员！");
+			json.put("Success", false);
+		}
+		return json;
+	}
+*/
+	// 不批准
+	@RequestMapping(value = "/rejects_leave", method = RequestMethod.POST)
+	@ResponseBody
+	public Object rejects(HttpServletRequest request) {
+
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			leaveService.rejects_leave(request);
+			json.put("Success", true);
+			json.put("Msg", "已审核!");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "程序出错,请联系技术员");
+
+		}
+		return json;
+	}
+
+}

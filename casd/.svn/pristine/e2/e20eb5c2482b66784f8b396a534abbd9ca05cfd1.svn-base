@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.ownCenter.OwnHeadDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+
+	<!-- 保存单头 -->
+	<insert id="saveOwnHead" useGeneratedKeys="true" keyProperty="own_purchase_id"
+		parameterType="com.casd.entity.ownCenter.OwnPurchaseHead">
+		INSERT INTO own_purchase_head
+		(own_purchase_id,own_purchase_companyId,own_purchase_projectId,own_purchase_planDate,
+		own_purchase_arriveDate,own_purchase_planMan,own_purchase_brand,own_purchase_status,own_purchase_type)
+		VALUES
+		(0,#{own_purchase_companyId},#{own_purchase_projectId},#{own_purchase_planDate},#{own_purchase_arriveDate},#{own_purchase_planMan},
+		#{own_purchase_brand},#{own_purchase_status},#{own_purchase_type})
+	</insert>
+
+	<!-- 保存采购单 -->
+	<insert id="saveOwnEntry" useGeneratedKeys="true"
+		keyProperty="own_purchase_entryId" parameterType="com.casd.entity.ownCenter.OwnPurchaseEntry">
+		INSERT INTO own_purchase_entry
+		(own_purchase_entryId,own_purchase_material,own_purchase_model,own_purchase_unit,
+		own_purchase_quantities,own_purchase_applyNum,own_purchase_leastPrice,own_purchase_price,own_purchase_purchaseTotal,
+		own_purchase_parentId,own_purchase_remarks)
+		VALUES
+		(0,#{own_purchase_material},#{own_purchase_model},#{own_purchase_unit},#{own_purchase_quantities},#{own_purchase_applyNum},
+		#{own_purchase_leastPrice},#{own_purchase_price},#{own_purchase_purchaseTotal},#{own_purchase_parentId},
+		#{own_purchase_remarks})
+	</insert>
+
+
+	<select id="ownHeadlist" parameterType="map" resultType="map">
+		select ${fields} from ${where} ${limit}
+	</select>
+
+	<select id="getCount" parameterType="map" resultType="int">
+		select COUNT(1) from ${where}
+	</select>
+
+	<select id="findOwnHead" parameterType="map" resultType="map">
+		select ${fields} from ${where}
+	</select>
+	<select id="findOwnEntry" parameterType="map" resultType="map">
+		select ${fields} from ${where}
+	</select>
+
+   <delete id="deleteEntry" parameterType="map">
+       DELETE FROM ${where}
+   </delete>
+    
+
+
+	<select id="updateOwnHead" parameterType="com.casd.entity.ownCenter.OwnPurchaseHead">
+		update own_purchase_head
+		<set>
+			<if test="own_purchase_companyId !=0">
+				own_purchase_companyId=#{own_purchase_companyId},
+			</if>
+			<if test="own_purchase_projectId != null">
+				own_purchase_projectId=#{own_purchase_projectId},
+			</if>
+			<if test="own_purchase_planDate !=null">
+				own_purchase_planDate=#{own_purchase_planDate},
+			</if>
+			<if test="own_purchase_arriveDate!=null">
+				own_purchase_arriveDate=#{own_purchase_arriveDate},
+			</if>
+			<if test="own_purchase_planMan!=null">
+				own_purchase_planMan=#{own_purchase_planMan},
+			</if>
+			<if test="own_purchase_brand != null">
+				own_purchase_brand=#{own_purchase_brand},
+			</if>
+			<if test="own_purchase_status != 0">
+				own_purchase_status=#{own_purchase_status},
+			</if>
+			<if test="own_purchase_type != 0">
+				own_purchase_type=#{own_purchase_type}
+			</if>
+			
+		</set>
+		where own_purchase_id=#{own_purchase_id}
+	</select>
+	
+
+<select id="updateOwnEntry" parameterType="com.casd.entity.ownCenter.OwnPurchaseEntry">
+		update own_purchase_entry
+		<set>
+			<if test="own_purchase_material !=null">
+				own_purchase_material=#{own_purchase_material},
+			</if>
+			<if test="own_purchase_model != null">
+				own_purchase_model=#{own_purchase_model},
+			</if>
+			<if test="own_purchase_unit !=null">
+				own_purchase_unit=#{own_purchase_unit},
+			</if>
+			<if test="own_purchase_quantities != 0">
+				own_purchase_quantities=#{own_purchase_quantities},
+			</if>
+			<if test="own_purchase_applyNum != 0">
+				own_purchase_applyNum=#{own_purchase_applyNum},
+			</if>
+			<if test="own_purchase_leastPrice != 0">
+				own_purchase_leastPrice=#{own_purchase_leastPrice},
+			</if>
+			<if test="own_purchase_price != 0">
+				own_purchase_price=#{own_purchase_price},
+			</if>
+			<if test="own_purchase_purchaseTotal != 0">
+				own_purchase_purchaseTotal=#{own_purchase_purchaseTotal},
+			</if>
+			<if test="own_purchase_remarks != null">
+				own_purchase_remarks=#{own_purchase_remarks}
+			</if>
+			
+		</set>
+		where own_purchase_parentId=#{own_purchase_parentId}
+	</select>
+     
+</mapper>

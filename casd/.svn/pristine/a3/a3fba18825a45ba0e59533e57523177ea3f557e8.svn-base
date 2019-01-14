@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.ownCenter.LeaveDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+
+	 <insert id="saveLeave" useGeneratedKeys="true" keyProperty="id" parameterType="com.casd.entity.ownCenter.Leave" >
+        INSERT INTO own_leave_table  (id,applicant,department,position,leave_category,start_time,end_time,reason,status,day_count,time_count,createdate,leaveFile_name) 
+        VALUES (0,#{applicant},#{department},#{position},#{leave_category},#{start_time},#{end_time},#{reason},#{status},#{day_count},#{time_count},#{createdate},#{leaveFile_name})
+    </insert>
+	
+	<select id="initLeave" parameterType="map" resultType="com.casd.entity.ownCenter.Leave">
+		select * from own_leave_table where id= ${id}
+	</select>
+	
+	<select id="getLeaveCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    
+    <select id="leaveList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit} 
+    </select>
+    
+    <select id="findLeaveByID" parameterType="map" resultType="com.casd.entity.ownCenter.Leave">
+        select * from own_leave_table where id=${id}
+    </select>
+    
+    <select id="updateLeave" parameterType="com.casd.entity.ownCenter.Leave" >
+        update own_leave_table 
+        <set>
+        	<if test="applicant!=null">
+         		applicant=#{applicant},
+         	</if>
+         	<if test="department!=null">
+         		department=#{department},
+         	</if>
+         	<if test="position!=null">
+         		position=#{position},
+         	</if>
+         	<if test="leave_category!=null">
+         		leave_category=#{leave_category},
+         	</if>
+         	<if test="start_time!=null">
+         		start_time=#{start_time},
+         	</if>
+         	<if test="end_time!=null">
+         		end_time=#{end_time},
+         	</if>
+         	<if test="reason!=null">
+         		reason=#{reason},
+         	</if>
+         	<if test="status!=null">
+         		status=#{status}
+         	</if>
+         	<if test="day_count!=null">
+         		day_count=#{day_count}
+         	</if>
+         	<if test="time_count!=null">
+         		time_count=#{time_count}
+         	</if>
+        </set>
+        where id=#{id}
+    </select>
+	
+	
+	<select id="deleLeave" parameterType="map" >
+        DELETE FROM ${where} WHERE id IN (${what})  
+    </select>
+    
+	<select id="selectStatus" parameterType="map"  resultType="int">
+        select status FROM ${where} WHERE id = ${what}  
+    </select>
+	
+	<update id="updateStatus" parameterType="map">
+		update own_leave_table set status=${status} where id=${billID}
+	</update>
+	
+</mapper>

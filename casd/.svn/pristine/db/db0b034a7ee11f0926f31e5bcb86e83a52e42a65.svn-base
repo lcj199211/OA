@@ -1,0 +1,158 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>首页</title>
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+<style type="text/css">
+fieldset {
+	border: solid 1px #aaa;
+}
+
+.hideFieldset {
+	border-left: 0;
+	border-right: 0;
+	border-bottom: 0;
+}
+
+.hideFieldset .fieldset-body {
+	display: none;
+}
+</style>
+</head>
+<body>
+
+<h1>转正申请档案表</h1>
+
+	<fieldset id="fd" style="width:880px;">
+		<legend>
+			<span>转正申请</span>
+		</legend>
+		<div class="fieldset-body">
+			<table  id="db" class="form-table" border="0" cellpadding="1" cellspacing="2">
+			
+			<tr><td><input type="hidden" name="userid" id="userid" value="${userid}"/></td></tr>
+				<tr>
+					<td  style="width:60px;">姓名：</td>
+					<td  style="width:150px"><input type="text" name="username " id="username" value="${username}"/></td>	
+						
+					<td style="width:60px;">部门：</td>
+					<td style="width:150px"><input name="department" id="department" value="${department}"/></td>	
+					<td  style="width:60px;">职位：</td>
+					<td  style="width:150px"><input type="text" name="role_name " id="role_name" value="${role_name}" readonly="readonly"/></td>	
+				</tr>		
+				<tr>
+					<td  style="width:60px;">学历：</td>
+					<td style="width:150px"><input name="education" id="education"
+					value="${education}"/></td>
+					<td  style="width:60px;">专业：</td>
+					<td style="width:150px"><input name="major" id="major"
+						 value="${major}"/></td>
+					<td style="width:60px;">试用期待遇：</td>
+					<td style="width:150px"><input name="on_trial" id="on_trial"
+						 value="${on_trial}"/></td> 
+					
+				</tr>
+					
+				<tr>
+					<td class="form-label">试用期：</td>
+					<td><input value="${incorporation_date}" class="easyui-datebox" name="incorporation_date" id="incorporation_date"
+						value="" style="width:143px"></td>
+					<td class="form-label">至~：</td>
+					<td><input value="${close_time}" class="easyui-datebox" name="close_time" id="close_time"
+					 style="width:143px"></td>
+					 <td class="form-label">转正待遇：</td>
+					<td style="width:150px"><input name="worker" id="worker"
+					value="${worker}"/></td>
+				
+				</tr> 
+	
+			</table>
+			
+			
+			<div id="main">
+
+		<div id="shen-chuang-fu" class="title">
+			<div style="float:left; margin-left: 5px" class="name">审核意见：</div>
+		</div>
+            <div id="opinion">
+				<input name="flow_audit_option" id="flow_audit" style="width:300px;height: 60px;"></input>
+			</div>
+	
+	</div>
+	<br />	
+			<div style="text-align:center">
+				<tr>
+					<td style="align:center"><a class="easyui-linkbutton"
+				href="javascript:;" id="btnSave" onclick="btnSave('pass');">通过审核</a> &nbsp;&nbsp;&nbsp;&nbsp; 
+				
+				<a class="easyui-linkbutton" href="javascript:;" id="btnBack" onclick="btnSave('notpass');">不通过</a>
+			<!-- 	<a class="easyui-linkbutton" href="javascript:;" id="btnBack" onclick="btnSave('tuihui');">退回</a> -->
+				</td>
+				</tr>
+			</div>
+		
+		</div>
+
+	
+
+</fieldset>
+	
+
+	<script type="text/javascript">
+	var auditID = ${auditID};
+
+	
+	/***处理操作列的功能***/
+	function cmdHanlder(cmd, row) {
+		
+		}
+
+
+				//弹框返回
+				function btnBack() {
+				
+				}
+		
+			function btnSave(Json){
+			  	
+				var flow_audit=$("#flow_audit").val();
+				var userid=$("#userid").val();
+			    if(flow_audit==''){
+			    	alert("审核意见不能为空!");
+			    	return false;
+			    }
+			   
+			     if(confirm("你确定提交吗？")){
+
+				$.ajax({
+					type : 'POST',
+					url : 'auditBecome.do?type='+Json,
+					data : {
+						    'auditID':auditID,
+						    'flow_audit':flow_audit,
+						    'userid':userid,
+						
+					},
+					success : function(data) {
+						
+					}
+					});
+			   
+			}}
+
+		
+	</script>
+</body>
+</html>

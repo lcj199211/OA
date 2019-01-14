@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.ownCenter.FieldPersonnelDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+
+	 <insert id="addFieldPersonne" useGeneratedKeys="true" keyProperty="field_personnel_id" parameterType="com.casd.entity.ownCenter.FieldPersonnel" >
+        INSERT INTO own_field_personnel (field_personnel_id,field_personnel_userid,field_personnel_company,field_personnel_rolename,
+        field_personnel_place,field_personnel_license,field_personnel_car,field_personnel_driver,field_personnel_cause,start_time,end_time,field_personnel_status) 
+        VALUES (0,#{field_personnel_userid},#{field_personnel_company},#{field_personnel_rolename},#{field_personnel_place},#{field_personnel_license},
+               #{field_personnel_car},#{field_personnel_driver},#{field_personnel_cause},#{start_time},#{end_time},#{field_personnel_status})
+    </insert>
+    
+    <!-- 审核记录 -->
+     <insert id="addFieldJpaPersonne" useGeneratedKeys="true" keyProperty="own_jpa_procinstid" parameterType="com.casd.entity.ownCenter.FieldPersonnel" >
+        INSERT INTO own_field_jpapersonnel (own_personnel_jpaid,own_jpa_time,own_jpa_userid,own_jpa_taskid,
+        own_jpa_procinstid,own_jpa_message,own_jpa_username) 
+        VALUES (0,#{own_jpa_time},#{own_jpa_userid},#{own_jpa_taskid},#{own_jpa_procinstid},#{own_jpa_message},
+               #{own_jpa_username})
+    </insert>
+	
+	<select id="findFieldpList" parameterType="map" resultType="map">
+	   select ${fields} from ${where} ${limit} 
+	</select>
+	
+    <select id="getFPCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    <delete id="deleteFieldPsl" parameterType="map">
+    DELETE FROM own_field_personnel ${where}
+    </delete>
+ 
+   
+    <select id="updateFieldPsl" parameterType="com.casd.entity.ownCenter.FieldPersonnel" >
+        update own_field_personnel 
+        <set>
+        	<if test="field_personnel_userid !=0">
+         		field_personnel_userid=#{field_personnel_userid},
+         	</if>
+         	<if test="field_personnel_company!=null">
+         		field_personnel_company=#{field_personnel_company},
+         	</if>
+         	<if test="field_personnel_rolename!=null">
+         		field_personnel_rolename=#{field_personnel_rolename},
+         	</if>
+         	<if test="field_personnel_place!=null">
+         		field_personnel_place=#{field_personnel_place},
+         	</if>
+         	<if test="field_personnel_license!=null">
+         		field_personnel_license=#{field_personnel_license},
+         	</if>
+         	<if test="field_personnel_car != 0">
+         		field_personnel_car=#{field_personnel_car},
+         	</if>
+         	<if test="field_personnel_driver!=null">
+         		field_personnel_driver=#{field_personnel_driver},
+         	</if>
+         	<if test="field_personnel_cause!=null">
+         		field_personnel_cause=#{field_personnel_cause},
+         	</if>
+         	<if test="start_time !=null">
+         		start_time=#{start_time},
+         	</if>
+         	<if test="end_time !=null">
+         		end_time=#{end_time},
+         	</if>
+         	<if test="field_personnel_status != 0">
+         		field_personnel_status=#{field_personnel_status}
+         	</if>
+        </set>
+        where field_personnel_id=#{field_personnel_id}
+    </select>
+	
+	
+	
+</mapper>

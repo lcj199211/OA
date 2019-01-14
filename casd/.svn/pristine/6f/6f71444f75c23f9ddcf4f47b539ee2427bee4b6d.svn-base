@@ -1,0 +1,269 @@
+package com.casd.serviceimpl.construct;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.activiti.engine.TaskService;
+import org.activiti.engine.delegate.DelegateExecution;
+import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.construct.APartyDao;
+import com.casd.entity.construct.ApartyMaterial;
+import com.casd.entity.construct.ApartyPur;
+import com.casd.entity.construct.ApartyPurEntry;
+import com.casd.entity.hr.Hregister;
+import com.casd.entity.uc.User;
+import com.casd.service.construct.APartyService;
+import com.casd.service.hr.ActivitiService;
+
+@Service
+public class ApartyServiceImpl implements APartyService {
+	
+	
+	@Autowired
+	private APartyDao apartyDao;
+	
+	@Autowired
+	private ActivitiService activitiService;
+	
+	@Autowired
+	private TaskService taskService;
+
+	@Override
+	public List<Map<String, Object>> getList(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			int count = apartyDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return apartyDao.getList(param);
+	}
+
+	
+
+	@Override
+	public void save_aPartyMaterial(ApartyMaterial apartyMaterial) {
+		// TODO Auto-generated method stub
+		
+		apartyDao.save_aPartyMaterial(apartyMaterial);
+		
+	}
+
+	@Override
+	public void delete_aPartyMaterial(String where) {
+		// TODO Auto-generated method stub
+		
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		apartyDao.delete_aPartyMaterial(map);
+		
+	}
+
+	@Override
+	@Transactional
+	public void cp_aParty_exl(List<List<Object>> list,
+			String construct_project_id) {
+		int emptyNum=0;
+		for (int i = 1; i < list.size(); i++) {
+			List<Object> eobj = list.get(i);
+			if(!eobj.get(4).toString().trim().equals("")){
+				emptyNum=0;
+				ApartyMaterial apartyMaterial=new ApartyMaterial();
+				apartyMaterial.setConstruct_Aparty_material_id(0);
+				apartyMaterial.setConstruct_Aparty_material_constructId(Integer.valueOf(construct_project_id));
+				apartyMaterial.setConstruct_Aparty_material_category(eobj.get(4).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_model(eobj.get(1).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_name(eobj.get(0).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_num(Double.valueOf(eobj.get(3).toString().trim().equals("")?"0.00":eobj.get(3).toString().trim()));
+				apartyMaterial.setConstruct_Aparty_material_remark(eobj.get(5).toString().trim());
+				apartyMaterial.setConstruct_Aparty_material_unit(eobj.get(2).toString().trim());
+				apartyDao.save_aPartyMaterial(apartyMaterial);
+			}else {
+				if (emptyNum==5) {
+					break;
+				}else {
+					emptyNum=emptyNum+1;
+				}
+			}
+		}
+		
+	}
+
+	@Override
+	public Map<String, Object> getConstruct(String fields,String where) {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", fields);
+		param.put("where", where);	
+		return apartyDao.getMap(param);
+	}
+
+	@Override
+	@Transactional
+	public int save_aPartyPur(ApartyPur apartyPur, String rows,String userid) throws Exception {
+		
+		int construct_Aparty_purchase_id = apartyPur.getConstruct_Aparty_purchase_id();
+		if (construct_Aparty_purchase_id==0) {
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			apartyPur.setConstruct_Aparty_purchase_creatTime(df.format(new Date()).toString());
+			apartyPur.setConstruct_Aparty_purchase_status("0");
+			apartyDao.save_aPartyPurHead(apartyPur);
+			construct_Aparty_purchase_id = apartyPur.getConstruct_Aparty_purchase_id();
+			
+			//启动流程
+		
+			String processDefinitioKey = "aPartyPurView"; // 定义流程的key,不可修改
+			
+			String title = "甲方材料采购"; // 请注意
+			String bizId = processDefinitioKey + "."+ construct_Aparty_purchase_id; // 获取业务id
+			activitiService.startProcesses(bizId, userid, processDefinitioKey,
+					title);
+			
+		}else {
+			apartyDao.save_aPartyPurHead(apartyPur);
+		}
+		JSONArray myJsonArray = JSONArray.fromObject(rows);
+		for (int i = 0; i < myJsonArray.size(); i++) {
+			ApartyPurEntry apartyPurEntry = new ApartyPurEntry();
+			JSONObject myjObject = myJsonArray.getJSONObject(i);
+			apartyPurEntry.setConstruct_Aparty_purEntry_id(Integer.valueOf(myjObject.get("construct_Aparty_purEntry_id").toString().isEmpty() ? String
+					.valueOf("0") : myjObject.getString("construct_Aparty_purEntry_id").toString()));
+			apartyPurEntry.setConstruct_Aparty_purEntry_materialId(Integer.valueOf(myjObject.get("construct_Aparty_purEntry_materialId").toString()));
+			apartyPurEntry.setConstruct_Aparty_purEntry_num(Double.valueOf(myjObject.get("construct_Aparty_purEntry_num").toString().isEmpty() ? String
+					.valueOf("0.00") : myjObject.getString("construct_Aparty_purEntry_num").toString()));
+			apartyPurEntry.setConstruct_aParty_byedNum(Double.valueOf(myjObject.get("construct_aParty_byedNum").toString().isEmpty() ? String
+					.valueOf("0.00") : myjObject.getString("construct_aParty_byedNum").toString()));
+			apartyPurEntry.setConstruct_Aparty_purEntry_parentId(construct_Aparty_purchase_id);
+			apartyPurEntry.setConstruct_Aparty_purEntry_remark(myjObject.get("construct_Aparty_purEntry_remark").toString());
+			apartyDao.save_aPartyPurEntry(apartyPurEntry);
+		}
+		return construct_Aparty_purchase_id;
+	}
+
+	@Override
+	@Transactional
+	public void dele_apartyPur(String id) {
+		// TODO Auto-generated method stub
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" where construct_Aparty_purchase_id = "+id);
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", sbf);
+		apartyDao.dele_apartyPur(map);
+		
+		sbf.delete(0, sbf.length());
+		sbf.append(" where construct_Aparty_purEntry_parentId = "+id);
+		delete_aPartyEntry(sbf.toString());
+	}
+
+	@Override
+	public void delete_aPartyEntry(String where) {
+		// TODO Auto-generated method stub
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		apartyDao.delete_aPartyEntry(map);
+	}
+
+	/**
+	 * 更新  construct_aparty_purchase 表
+	 * 
+	 * */
+	@Override
+	public void updateApartyPur(ApartyPur apartyPur) {
+		
+		apartyDao.updateApartyPur(apartyPur); 
+		
+	}
+
+	/***
+	 *  @param execution 流程设置参数
+	 *  @param  status 状态
+	 *  
+	 * */
+	@Override
+	@Transactional
+	public void apartyPurStatus(DelegateExecution execution, String status) {
+		String bizkey= execution.getProcessBusinessKey();
+		
+		String[] strs=bizkey.split("\\.");
+        String bizId=null;
+		for(int i=0,len=strs.length;i<len;i++){
+			bizId=strs[i].toString();
+		}
+		ApartyPur apartyPur=new ApartyPur();
+		apartyPur.setConstruct_Aparty_purchase_id(Integer.valueOf(bizId));
+		apartyPur.setConstruct_Aparty_purchase_status(status);
+		updateApartyPur(apartyPur);
+			
+	}
+
+	@SuppressWarnings("unused")
+	@Transactional
+	public void aPartyPurPass(HttpServletRequest request) throws Exception {
+		 
+			String taskid=request.getParameter("taskid");
+			String taskName=request.getParameter("taskName");
+			String options=request.getParameter("options");//获取审核意见
+			
+			
+			User user=(User) request.getSession().getAttribute("loginUser");//当前办理人
+		    String userid=user.getUserid()+"";  //当前审核人id
+		   String  nextUser=null;
+		   
+		   if(nextUser==null) {
+		       nextUser = (String) taskService.getVariable(taskid,"username");  
+		   }else{
+			   nextUser=request.getParameter("username");
+		     }
+		      
+			Map<String, Object> vars=new HashMap<String, Object>();
+			if (taskName.equals("项目经理申请")) {
+				vars.put("sign","true");	
+				
+			}else {
+				if(options!=null){
+				activitiService.comment(taskid,userid,options);
+				}
+			}
+		     	taskService.claim(taskid,userid);
+				taskService.complete(taskid,vars);	
+				
+				String content="您有一张甲方材料采购单需要审核!"; //请假内容
+				String theme="甲方材料采购单!"; //邮件标题   
+			   activitiService.sendEmail(theme, content, nextUser);
+		 
+		
+	}
+
+	@Override
+	public List<Map<String, Object>> dataList(String fields, String where) {
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("fields", fields);
+		map.put("where", where);
+		return apartyDao.getData(map);
+	}
+}

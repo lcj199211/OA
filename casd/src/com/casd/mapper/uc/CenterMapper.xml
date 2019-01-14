@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    <!-- 解决表名与字段不匹配 -->
+<mapper namespace="com.casd.dao.uc.CenterDao">
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+ 
+     
+
+    <select id="centerList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getCenterCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    
+    <select id="finance" parameterType="map" resultType="map">
+        select ${fields} from ${where}
+    </select>
+    
+    
+    <!-- 评估内容 不存在就插入存在就保存 -->
+  <!--   <insert id="existence" parameterType="com.casd.entity.uc.User">
+     INSERT INTO `uc_user`(`userid`,`username`,`password`,`department`,`phone_number`,`email`,`sex`,`major`,`user_card`,`card_address`,`role_id`,`age`,`marital_status`,`on_trial`,`worker`,`birth_date`,`close_time`,`incorporation_date`,`emergent_contact`, `education`,`profl_certificate`,`permanent_address`,`status`) 
+     VALUES(#{userid},#{username},#{password},#{department},#{phone_number},#{email},#{sex},#{major},#{user_card},#{card_address},#{role_id},#{age},#{marital_status},#{on_trial},#{worker},#{birth_date,jdbcType=DATE},#{close_time,jdbcType=DATE},#{incorporation_date,jdbcType=DATE},#{emergent_contact}, #{education},#{profl_certificate},#{permanent_address},#{status})
+	 
+	 on duplicate key update userid=#{userid},username=#{username},	sex=#{sex},phone_number=#{phone_number},
+	    						email=#{email},user_card=#{user_card},card_address=#{card_address},role_id=#{role_id},
+	    						age=#{age},marital_status=#{marital_status},birth_date=#{birth_date},incorporation_date=#{incorporation_date},
+	    						emergent_contact=#{emergent_contact},education=#{education},profl_certificate=#{profl_certificate},
+	    						permanent_address=#{permanent_address}
+    </insert>
+     -->
+</mapper>
+
+

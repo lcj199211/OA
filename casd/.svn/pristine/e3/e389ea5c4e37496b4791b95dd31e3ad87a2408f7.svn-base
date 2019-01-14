@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.ownCenter.OwnGoalDao">
+   
+   <select id="getOwnGoalList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit} 
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+   
+</mapper>

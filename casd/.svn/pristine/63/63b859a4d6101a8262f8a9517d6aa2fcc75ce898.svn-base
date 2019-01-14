@@ -1,0 +1,36 @@
+package com.casd.service.manage;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONArray;
+
+import org.activiti.engine.delegate.DelegateExecution;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.manage.AchReview;
+import com.casd.entity.manage.Contract;
+import com.casd.entity.ownCenter.Leave;
+
+public interface ContractService {
+
+	List<Map<String, Object>> contractList(int pageIndex, int pageSize,
+			Ref<Integer> record, String fields, String string) throws Exception;
+
+	void saveContract(Contract contract, JSONArray reqfundsJson);
+
+	Map<String, List<Map<String, Object>>> getData(String manage_contract_id);
+
+	void delete_Contract(String manage_contract_id);
+
+	void delete_Reqfunds(String manage_reqfunds_id);
+
+	String getSum();
+	
+	
+	
+		
+	 
+}

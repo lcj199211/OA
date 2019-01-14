@@ -1,0 +1,185 @@
+package com.casd.controller.uc;
+
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.uc.Costapp;
+import com.casd.service.uc.CostappService;
+
+
+
+@Controller
+@RequestMapping("/admin")
+public class CostappController<costapp> {
+
+	@Autowired
+	private CostappService costappService;
+
+	
+	
+	@RequestMapping(value = "/costappList", method = RequestMethod.GET)
+	public ModelAndView costappList() {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("uc/costappList");
+		return mv;
+
+	}
+
+	@RequestMapping(value = "/costappList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> costappList(HttpServletRequest request)
+			throws Exception {
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
+
+		
+		StringBuilder sBuilder = new StringBuilder();
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		Ref<Integer> record = new Ref<Integer>();
+		String fields = "*";
+		sBuilder.append(" uc_costapp ");
+		sBuilder.append(" where 1=1");
+		
+		String costapp_company = request.getParameter("costapp_company");
+		if (StringUtils.hasText(costapp_company)) {
+			sBuilder.append(" and costapp_company like '%" + costapp_company + "%'");
+		}
+		
+
+		// 部门列表
+		List<Map<String, Object>> data = costappService.costappList(pageIndex,
+				pageSize, record, fields, sBuilder.toString());
+		jsonMap.put("rows", data);
+		jsonMap.put("total", record.getValue());
+
+		return jsonMap;
+
+	}
+
+	
+	
+	/**
+	 *  绩效考核新增界面,修改界面
+	 * @throws Exception 
+	 * 
+	 * */
+	@RequestMapping(value = "/costappNew", method = RequestMethod.GET)
+	public ModelAndView costappNew(HttpServletRequest request ,Model model) throws Exception {
+		ModelAndView mv = new ModelAndView();
+		List<Map<String, Object>> data=new ArrayList<Map<String,Object>>();
+		
+//	List<Map<String, Object>>userList =	supOpinionService.supOpinionUser("绩效考核申请","achReviewView");
+	
+		if (request.getParameter("costapp_id")!="") {
+			int costapp_id = Integer.valueOf(request.getParameter("costapp_id").toString());
+			Map<String, Object> map=new HashMap<String, Object>();
+			map.put("costapp_id", costapp_id);
+			data= costappService.getData(map);
+			model.addAttribute("data", data.get(0));
+			mv.addObject("edit", false);
+		}else {
+			mv.addObject("edit", true);
+		}
+//	    mv.addObject("userList", userList);
+		mv.setViewName("uc/costappNew");
+		return mv;
+
+	}
+	
+	/**
+	 *  申请查看界面
+	 * 
+	 * */
+	@RequestMapping(value = "/costappView", method = RequestMethod.GET)
+	public ModelAndView costappView(HttpServletRequest request ,Model model) {
+		int costapp_id = Integer.valueOf(request.getParameter("bizId").toString());
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("costapp_id", costapp_id);
+		List<Map<String, Object>> data= costappService.getData(map);
+		model.addAttribute("data", data.get(0));
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("uc/costappView");
+		return mv;
+	}
+	
+	/**
+	 *  绩效考核删除
+	 * 
+	 * */
+	@RequestMapping(value = "/delect_costapp", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> delect_costapp(HttpServletRequest request) {
+		String costapp_id = request.getParameter("costapp_id");
+		Map<String, Object> json = new HashMap<String, Object>();
+
+		try {
+			Map<String, Object> map=new HashMap<String, Object>();
+			StringBuffer sbf = new StringBuffer();
+			sbf.append(" uc_costapp where costapp_id=" + costapp_id);
+			map.put("where", sbf);
+			costappService.delete_data(map);
+
+		} catch (Exception e) {
+			json.put("msg", "删除失败!");
+			e.printStackTrace();
+		}
+
+		return json;
+
+	}
+	
+	
+	
+	/**
+	 *  申请保存
+	 * 
+	 * */
+	@RequestMapping(value = "/save_costapp", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> save_costapp(HttpServletRequest request)
+			throws Exception {
+		
+		Costapp costapp=new Costapp();
+		String costapp_amount=request.getParameter("costapp_amount");
+		String costapp_id=request.getParameter("costapp_id");
+		if (costapp_id ==null || StringUtils.isEmpty(costapp_id)) {
+			costapp.setCostapp_id(0);
+			
+		}else {
+			costapp.setCostapp_id(Integer.valueOf(request.getParameter("costapp_id").toString()));
+		}
+		if (costapp_amount ==null || StringUtils.isEmpty(costapp_amount)) {
+			costapp.setCostapp_amount((double) 0);
+			
+		}else {
+			costapp.setCostapp_amount(Double.valueOf(request.getParameter("costapp_amount").toString()));
+		}
+		costapp.setCostapp_appitem(request.getParameter("costapp_appitem"));
+		costapp.setCostapp_company(request.getParameter("costapp_company"));
+		costapp.setCostapp_application(request.getParameter("costapp_application"));
+		costapp.setCostapp_managerview(request.getParameter("costapp_managerview"));
+		costapp.setCostapp_chairmanview(request.getParameter("costapp_chairmanview"));
+		costapp.setCostapp_majoyview(request.getParameter("costapp_majoyview"));
+		costapp.setCostapp_financeview(request.getParameter("costapp_financeview"));
+		costappService.save_costapp(costapp);
+		
+		return null;
+		
+	}
+	
+}

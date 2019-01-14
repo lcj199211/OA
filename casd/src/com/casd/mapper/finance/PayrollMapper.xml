@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.finance.PayrollDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+	<!-- 初始化页面流程 -->	
+    
+    <!--查询审核列表  -->
+    <select id="payrollList" parameterType="map" resultType="map">
+		select *
+		from ${where} ${limit}
+	</select>
+	<select id="getPayrollListCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	<insert id="insetPayroll" parameterType="com.casd.entity.finance.Payroll">   
+	INSERT into finance_payroll(wages_id,user_name,role_name,attendances,vacation,go_out,leave_day,base_pay,years_wages,post_wage,technical_wages,total_wages,
+	meal_supplement,phone_subsidy,deduction,should_wages,social_security,any_other,payroll,remarks,finance_paylist_id)
+	
+	VALUES (#{wages_id},#{user_name},#{role_name},#{attendances},#{vacation},#{go_out},#{leave_day},#{base_pay},#{years_wages}
+	          ,#{post_wage},#{technical_wages},#{total_wages},#{meal_supplement},#{phone_subsidy},#{deduction},#{should_wages},#{social_security},#{any_other}
+	          ,#{payroll},#{remarks},#{finance_paylist_id})
+	on duplicate key update
+	            wages_id=#{wages_id},user_name=#{user_name},role_name=#{role_name},attendances=#{attendances},vacation=#{vacation},go_out=#{go_out},
+	            leave_day=#{leave_day},leave_day=#{leave_day},years_wages=#{years_wages},post_wage=#{post_wage},technical_wages=#{technical_wages},
+	            total_wages=#{total_wages},meal_supplement=#{meal_supplement},phone_subsidy=#{phone_subsidy},deduction=#{deduction},should_wages=#{should_wages},
+	            social_security=#{social_security},any_other=#{any_other},payroll=#{payroll},remarks=#{remarks},finance_paylist_id=#{finance_paylist_id}
+	
+	</insert>
+	
+	<select id="getPayList" parameterType="map" resultType="map">
+		select *  from  finance_paylist pay left join uc_center cent on cent.center_id=pay.gad_paylist_centerid  where gad_paylist_id=${what}
+	</select>
+	<select id="getPayrolls" parameterType="map" resultType="map">
+		select *  from  finance_payroll where finance_paylist_id=${what}
+	</select>
+	
+	<delete id="delePayRollByID" parameterType="map">
+    	    DELETE FROM finance_payroll WHERE wages_id IN (${what})  
+    </delete>
+	<delete id="delePayList" parameterType="map">
+    	    DELETE finance_payroll,finance_paylist from ${what} 
+    </delete>
+	
+</mapper>

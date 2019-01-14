@@ -1,0 +1,4 @@
+eclipse.preferences.version=1
+validator.Checked=WebRoot/res/admin/scripts/ueditor,WebRoot/res/admin/scripts/jit-yc.js,WebRoot/res/admin/scripts/jquery-1.11.0.min.js,WebRoot/res/admin/scripts/json2.min.js,WebRoot/res/admin/scripts/jquery.min.js,WebRoot
+validator.Revalidate=false
+validator.Unchecked=WebRoot/res/jquery-easyui/license_freeware.txt,WebRoot/res/jquery-easyui/easyloader.js,WebRoot/res/jquery-easyui/src,WebRoot/res/admin,WebRoot/res/jquery-easyui/readme.txt,WebRoot/res/jquery-easyui/plugins,WebRoot/res/css,WebRoot/res/fonts,WebRoot/res/jquery-easyui/themes,WebRoot/res/jquery-easyui/locale,WebRoot/WEB-INF,WebRoot/index.jsp,WebRoot/res/jquery-easyui/changelog.txt,WebRoot/META-INF,WebRoot/res/jquery-easyui/jquery.easyui.min.js,WebRoot/res/jquery-easyui/jquery.easyui.mobile.js,WebRoot/res/images

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.uc.UserDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+     <!-- 插入人事档案信息 -->
+       <insert id="informationUser" parameterType="com.casd.entity.uc.User" useGeneratedKeys="true" keyProperty="userid">        
+            INSERT INTO `uc_user`(`userid`,`username`,`password`,`phone_number`,`email`,`sex`,`user_card`,`card_address`,`role_id`,`age`,`marital_status`,`birth_date`,`incorporation_date`,`emergent_contact`, `education`,`profl_certificate`,`permanent_address`) 
+            VALUES(0,#{username},#{password},#{phone_number},#{email},#{sex},#{user_card},#{card_address},#{role_id},#{age},#{marital_status},#{birth_date,jdbcType=DATE},#{incorporation_date,jdbcType=DATE},#{emergent_contact}, #{education},#{profl_certificate},#{permanent_address})
+     </insert>
+     
+     
+     
+     
+     
+     
+    <select id="userList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="geUsertCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    <select id="login" resultType="com.casd.entity.uc.User" parameterType="map">
+     select ${fields} from ${where}
+    </select>
+    
+    <insert id="insertUser" parameterType="com.casd.entity.uc.User" useGeneratedKeys="true" keyProperty="userid">        
+    INSERT INTO uc_user VALUES(#{userid},#{username},#{password},#{phone_number},#{email},#{sex},#{user_card},#{card_address},#{role_id})
+     </insert>
+     
+    <update id="updateUser">
+		UPDATE `uc_user` SET ${pars} ${where}
+	</update>
+    <select id="queryUserById" resultType="map" parameterType="map">
+      select ${fields} from ${where}
+    
+    </select>
+    
+    <delete id="deleteUser" parameterType="map">
+    delete ${fields} from ${where}
+    </delete>
+    
+    
+    <select id="queryUser" resultType="com.casd.entity.uc.User" parameterType="map">
+      select ${fields} from ${where}
+    </select>
+    
+     <select id="queryId" resultType="map" parameterType="map">
+      select ${fields} from ${where}
+    </select>
+    
+    
+    <!-- 评估内容 不存在就插入存在就保存 -->
+    <insert id="existence" parameterType="com.casd.entity.uc.User">
+     INSERT INTO `uc_user`
+     (
+     `userid`,`username`,`password`,`department`,`phone_number`,`email`,`sex`,
+     `user_card`,`card_address`,`role_id`,`age`,`marital_status`,
+     `birth_date`,`incorporation_date`,`emergent_contact`, `education`,
+     `profl_certificate`,`permanent_address`,`status`,`emergent_phone`,`level`,`remarks`,
+     `renew`,`blood`,`native_place`,`birth`,`nation`,`weight`,`health`,`close_time`,`on_trial`,`worker`,`major`,`sign`,`age_limit`,`expiry`,`user_num`
+     ) 
+     VALUES
+     (
+     #{userid},#{username},#{password},#{department},#{phone_number},#{email},#{sex},
+     #{user_card},#{card_address},#{role_id},#{age},#{marital_status},
+     #{birth_date,jdbcType=DATE},#{incorporation_date,jdbcType=DATE},
+     #{emergent_contact}, #{education},#{profl_certificate},#{permanent_address},#{status},#{emergent_phone}
+     ,#{level},#{remarks},#{renew},#{blood},#{native_place},#{birth},#{nation},#{weight},#{health}
+     ,#{close_time,jdbcType=DATE},#{on_trial},#{worker},#{major},#{sign},#{age_limit},#{expiry},#{user_num}
+     )
+	 
+	 on duplicate key update userid=#{userid},username=#{username},department=#{department},sex=#{sex},phone_number=#{phone_number},
+	    						email=#{email},user_card=#{user_card},card_address=#{card_address},role_id=#{role_id},
+	    						age=#{age},marital_status=#{marital_status},birth_date=#{birth_date},incorporation_date=#{incorporation_date},
+	    						emergent_contact=#{emergent_contact},education=#{education},profl_certificate=#{profl_certificate},
+	    						permanent_address=#{permanent_address},status=#{status},emergent_phone=#{emergent_phone},level=#{level}
+	    						,remarks=#{remarks},renew=#{renew},blood=#{blood}
+	    						,native_place=#{native_place},birth=#{birth},nation=#{nation}
+	    						,weight=#{weight},health=#{health}
+	    						,close_time=#{close_time},on_trial=#{on_trial},worker=#{worker},major=#{major}
+	    						,sign=#{sign},age_limit=#{age_limit},expiry=#{expiry},user_num=#{user_num}
+    </insert>
+    
+</mapper>
+
+

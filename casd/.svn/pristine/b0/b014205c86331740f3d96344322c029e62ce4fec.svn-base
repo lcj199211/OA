@@ -1,0 +1,142 @@
+package com.casd.controller.personManagem;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.task.IdentityLink;
+import org.activiti.engine.task.Task;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.entity.uc.User;
+import com.casd.service.construct.PurchaseService;
+import com.casd.service.hr.ActivitiService;
+
+@Controller
+@RequestMapping("/admin")
+public class ActivitiControllers {
+	
+	@Autowired
+	private ActivitiService activitiService;
+	@Autowired    
+	private TaskService taskService;    
+    @Autowired    
+    private RuntimeService runtimeService; 
+    
+    @Autowired
+    private PurchaseService purchaseService;	
+	//部署
+	
+	
+	//启动流程实例
+	
+     /**
+      *  查询任务列表
+      *  
+      * 
+      * */
+	@RequestMapping(value = "/findTaskList", method = RequestMethod.GET)
+	 public ModelAndView findTaskList(){
+		
+			ModelAndView mv=new ModelAndView();
+			mv.setViewName("personManagem/findTaskList");
+		
+			return mv;
+
+	}
+	/***
+	 *   查询任务列表
+	 * @param  获选人查询  taskCandidateUser
+	 * @param 
+	 * @return 
+	 * @throws Exception 
+	 */
+	@RequestMapping(value = "/findTaskList", method = RequestMethod.POST)
+	@ResponseBody
+	 public Map<String, Object> findTaskList(HttpServletRequest request) throws Exception{
+		
+		   User user =(User) request.getSession().getAttribute("loginUser");
+			String username=user.getUsername();
+			
+			List<Map<String, Object>> levaList=new ArrayList<Map<String,Object>>();
+			Map<String, Object> json=new HashMap<String, Object>();
+
+	     	List<Task> list = taskService.createTaskQuery().taskCandidateOrAssigned(username)
+				                          // .taskCandidateUser(username)   
+				                           .list(); //查询获选人	
+	     	
+			int count=(int)taskService.createTaskQuery()  
+	                           .taskCandidateUser(username)   
+							   .count();
+			
+					if (list != null && list.size() > 0) {
+						for (Task task : list) {
+							Map<String, Object> map=new HashMap<String, Object>();
+							String title= runtimeService.getVariable(task.getExecutionId(),"title").toString();
+							/*System.out.println("任务ID：" + task.getId());
+							System.out.println("任务名称：" + task.getName());
+							System.out.println("任务创建时间：" + task.getCreateTime());
+							System.out.println("任务的办理人：" + task.getAssignee());
+							System.out.println("流程实例ID：" + task.getProcessInstanceId());
+							System.out.println("执行对像ID：" + task.getExecutionId());
+							System.out.println("流程定义ID：" + task.getProcessDefinitionId());*/
+                  /*          System.out.println("任务id："+task.getId()+"\n"+task.getDescription()+"\n"+
+							                            task.getCategory()+"\n"+task.getExecutionId()+"\n"+
+                            		                    task.getFormKey()+"\n"+task.getOwner()+"\n"+
+							                            task.getParentTaskId()+"\n"+task.getPriority()+"\n"+
+                            		                    task.getProcessDefinitionId()+"\n"+task.getProcessInstanceId()+"\n"+
+							                            task.getTaskDefinitionKey()+"\n"+task.getTenantId()+"\n"+
+                            		                    task.getCreateTime()+"\n"+task.getProcessVariables()+"\n"+
+							                            task.getTaskLocalVariables()+"\n"+task.getAssignee()+"");*/
+                   System.out.println(task.getFormKey()+"ssss"+ task.getProcessDefinitionId()+task.getOwner());
+                   
+                   
+                   Map<String, Object> ma=new HashMap<String, Object>();
+                 //  taskService.claim(task.getId(), "应小兰");
+               //    ma.put("sign", "true");  
+                // taskService//与正在执行的任务管理相关的Service
+         		 // .complete(task.getId(),ma);
+                	// List<IdentityLink> sdsString=  taskService.getIdentityLinksForTask(task.getId()); 	
+                	//activitiService.backTaskTab(task.getId());
+                	//purchaseService.fidbusiness();
+                	 map.put("taskid", task.getId());    //任务id
+							map.put("name", task.getName());   //任务名称
+							map.put("createTime", task.getCreateTime());  //创建时间 
+							map.put("assignee", username);      //办理人为当前yonghu
+							map.put("url",task.getFormKey());   //当前任务路径
+							
+							map.put("title",title);  //流程标题
+							map.put("processInstanceId", task.getProcessInstanceId());  //流程实例id
+
+							levaList.add(map);
+	
+						    }
+						json.put("rows", levaList);
+						json.put("total", count);
+				     	}else {
+				     	json.put("rows", "");
+				     	json.put("total",0);
+						}
+				
+			        return json;  
+
+		  
+	  }
+	
+	
+	
+
+	 
+	 
+
+}

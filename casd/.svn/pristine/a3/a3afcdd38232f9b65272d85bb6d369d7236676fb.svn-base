@@ -1,0 +1,12 @@
+package com.casd.service.construct;
+
+import com.casd.entity.construct.Drawmoney;
+
+
+public interface DrawmoneyService {
+	
+	 public void savaDrawmoney(Drawmoney draw);
+	 
+	 void  updateDrawmoney(Drawmoney draw);
+
+}

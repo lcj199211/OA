@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.hr.HregisterDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->	
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+     <insert id="addHregisters" parameterType="com.casd.entity.hr.Hregister">        
+            INSERT into hr_register(job_id,begin_date,end_date,corporate_name,job_name,reason,user_id)
+            VALUES (#{job_id},#{begin_date},#{end_date},#{corporate_name},#{job_name},#{reason},#{user_id})
+
+	        on duplicate key update job_id=#{job_id}
+            
+     </insert>
+     <select id="selectHregister" parameterType="map" resultType="map">
+         select ${fields} from ${where} 
+      </select>
+    
+      <delete id="deleteHregister" parameterType="map">
+        DELETE FROM hr_register  ${where}
+    </delete>
+    
+    
+</mapper>

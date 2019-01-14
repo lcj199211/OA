@@ -1,0 +1,203 @@
+package com.casd.serviceimpl.finance;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.finance.MaterialDao;
+import com.casd.entity.finance.Material;
+import com.casd.entity.finance.MaterialModel;
+import com.casd.entity.finance.MaterialPrice;
+import com.casd.entity.finance.MaterialSeries;
+import com.casd.service.finance.MaterialService;
+
+@Service
+public class MaterialServiceImpl implements MaterialService{
+
+	@Autowired
+	private MaterialDao materialDao;
+	
+	@Override
+	public List<Map<String, Object>> materialList(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			Integer count = materialDao.getMaterialCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return materialDao.materialList(param);
+	}
+
+	@Override
+	@Transactional
+	public void addMaterial(Material material) {
+		
+		
+     materialDao.addMaterial(material);
+	           
+	        
+	}
+
+	@Override
+	public List<Map<String, Object>> getMaterialById(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+	    
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			Integer count = materialDao.getCountModel(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return materialDao.getMaterialById(param);
+	}
+    
+	@Override
+	@Transactional
+	public Map<String, Object> editmaterial(MaterialModel materialModel) {
+		
+		int modelId=materialModel.getConstruct_material_model_id();
+		materialDao.addMaterialModel(materialModel);
+		if(modelId==0){
+			//MaterialPrice price=new MaterialPrice();
+			Map<String, Object> map=new HashMap<String, Object>();
+			String fields="*";
+			StringBuffer sBuffer=new StringBuffer();
+			sBuffer.append(" construct_material_table material ");
+			sBuffer.append(" LEFT JOIN construct_material_series series on material.construct_material_seriesId=series.construct_material_seriesID ");
+			sBuffer.append(" where material.construct_material_id="+materialModel.getConstruct_material_model_parentid()+" ");
+			map.put("fields", fields);
+			map.put("where", sBuffer);
+			List<Map<String, Object>> construct=materialDao.selectData(map);
+			String suppliers = construct.get(0).get("construct_material_seriesSuppliers").toString();
+			
+			fields="construct_supplier_id";
+			sBuffer.delete(0, sBuffer.length() - 1);		
+			sBuffer.append("construct_supplier_table  where  construct_supplier_id in ("+suppliers+")");
+			map.clear();
+			map.put("fields", fields);
+			map.put("where", sBuffer);
+			List<Map<String, Object>> supplier=materialDao.selectData(map);
+			for (int i = 0; i < supplier.size(); i++) {
+				map.clear();
+				map.put("table", "construct_material_price");
+				map.put("fieds", "("+supplier.get(i).get("construct_supplier_id")+","+materialModel.getConstruct_material_model_id()+","
+						+ "'"+materialModel.getConstruct_material_model_unit()+"','"+materialModel.getConstruct_material_model_name()+"',"
+						+"'"+construct.get(0).get("construct_material_name")+"')");
+				materialDao.insertData(map);
+			}
+			
+		}
+		return null;
+		
+		
+	}
+
+	@Override
+	public void delete(String where) throws Exception{
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		materialDao.deleteMateria(map);
+	}
+
+	@Override
+	public void deletemt(String where) {
+		Map<String, Object>map=new HashMap<String, Object>();
+		map.put("where", where);
+		
+		materialDao.deletemultiple(map);
+	}
+
+	@Override
+	@Transactional
+	public void saveSeries(MaterialSeries materialSeries) {
+		// TODO Auto-generated method stub
+		materialDao.saveSeries(materialSeries);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectData(String fields, String sbf) {
+		// TODO Auto-generated method stub
+		List<Map<String, Object>> dataList=new ArrayList<Map<String,Object>>();
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("fields", fields);
+		map.put("where", sbf);
+		dataList=materialDao.selectData(map);
+		return dataList;
+	}
+
+	@Override
+	public void delete_Series(String where) {
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		materialDao.delete_Series(map);
+		
+	}
+
+	@Override
+	@Transactional
+	public void cp_material_exl(List<List<Object>> list,String construct_material_seriesId) {
+		
+		String materialName="";
+		int material_id=0;
+		for (int i = 0; i < list.size(); i++) {
+			  List<Object> eobj = list.get(i);
+			  
+			  if (!eobj.get(1).toString().trim().equals(materialName)) {
+				  Material material=new Material();
+				  material.setConstruct_material_id(0);
+				  material.setConstruct_material_name(eobj.get(1).toString().trim());
+				  material.setConstruct_material_seriesId(Integer.valueOf(construct_material_seriesId));
+				  material_id=materialDao.addMaterial(material);
+				  material_id=material.getConstruct_material_id();
+				  materialName=eobj.get(1).toString().trim();
+				  addMaterialModel(material_id,eobj);
+				  
+			}else {
+				addMaterialModel(material_id,eobj);
+			}
+			  
+	}
+	}
+		
+	private  void addMaterialModel(int material_id, List<Object> eobj){
+			
+		  MaterialModel materialModel =new MaterialModel();
+		  materialModel.setConstruct_material_model_id(0);
+		  materialModel.setConstruct_material_model_parentid(material_id);
+		  materialModel.setConstruct_material_model_name(eobj.get(3).toString().trim());
+		  
+		  materialModel.setConstruct_material_model_unit(eobj.get(2).toString().trim());
+		  materialDao.addMaterialModel(materialModel);
+		
+	}
+	
+
+}

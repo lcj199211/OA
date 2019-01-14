@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.DrawmoneyDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+
+    
+   <insert id="savaDrawmoney" useGeneratedKeys="true" keyProperty="construct_draw_id" parameterType="com.casd.entity.construct.Drawmoney">
+       insert into construct_drawmoney(construct_draw_id,construct_project_id,construct_project_cost,construct_draw_unit,
+                                        construct_draw_payee,construct_draw_type,construct_draw_cash,construct_accumulated_money,
+                                        construct_actual_payment,construct_payment_method,construct_draw_fopinion,
+                                        construct_draw_copinion,construct_draw_zopinion,construct_draw_status)   
+        VALUES (0,#{construct_project_id},#{construct_project_cost},#{construct_draw_unit},#{construct_draw_payee},
+                  #{construct_draw_type},#{construct_draw_cash},#{construct_accumulated_money},#{construct_actual_payment},
+                  #{construct_payment_method},#{construct_draw_fopinion},#{construct_draw_copinion},
+                  #{construct_draw_zopinion},#{construct_draw_status}) 
+   </insert>
+
+
+  
+    <update id="updateDrawmoney" parameterType="com.casd.entity.construct.Drawmoney">
+          update construct_drawmoney
+          <set>
+        	
+         	<if test="construct_project_id =null">
+         		construct_project_id=#{construct_project_id},
+         	</if>
+         	<if test="construct_project_cost !=null">
+         		construct_project_cost=#{construct_project_cost},
+         	</if>
+         	<if test="construct_draw_unit!=null">
+         		construct_draw_unit=#{construct_draw_unit},
+         	</if>
+         	<if test="construct_draw_payee!=null">
+         		construct_draw_payee=#{construct_draw_payee},
+         	</if>
+         	<if test="construct_draw_type != null">
+         		construct_draw_type=#{construct_draw_type},
+         	</if>
+         	<if test="construct_draw_cash !=null">
+         		construct_draw_cash=#{construct_draw_cash},
+         	</if>
+         	<if test="construct_accumulated_money !=null">
+         		construct_accumulated_money=#{construct_accumulated_money},
+         	</if>
+         	<if test="construct_payment_method !=null">
+         		construct_payment_method=#{construct_payment_method},
+         	</if>
+         
+         	<if test="construct_draw_fopinion!=null">
+         		construct_draw_fopinion=#{construct_draw_fopinion},
+         	</if>
+         	<if test="construct_draw_copinion!=null">
+         		construct_draw_copinion=#{construct_draw_copinion},
+         	</if>
+         	<if test="construct_draw_zopinion!=null">
+         		construct_draw_zopinion=#{construct_draw_zopinion},
+         	</if>
+         	<if test="construct_draw_status !=null">
+         		construct_draw_status=#{construct_draw_status}
+         	</if>
+         	
+         		
+        </set>
+        where construct_draw_id=#{construct_draw_id}
+    </update>
+   
+ 
+    
+</mapper>

@@ -1,0 +1,290 @@
+package com.casd.controller.personManagem;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricProcessInstanceQuery;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.task.Task;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.uc.User;
+import com.casd.service.construct.PurchaseService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.uc.UserService;
+
+@Controller
+@RequestMapping("/admin")
+public class ActivitiControllers {
+	
+	@Autowired
+	private ActivitiService activitiService;
+	@Autowired    
+	private TaskService taskService;    
+    @Autowired    
+    private RuntimeService runtimeService; 
+    
+    @Autowired    
+    private  ProcessEngine processEngine;
+    
+    @Autowired
+    private PurchaseService purchaseService;	
+
+    @Autowired
+	private UserService userService;
+	
+	//启动流程实例
+	
+     /**
+      *  查询任务列表
+      *  
+      * 
+      * */
+	@RequestMapping(value = "/findTaskList", method = RequestMethod.GET)
+	 public ModelAndView findTaskList(){
+		
+			ModelAndView mv=new ModelAndView();
+			mv.setViewName("personManagem/findTaskList");
+		
+			return mv;
+
+	}
+	/***
+	 *   查询任务列表
+	 * @param  获选人查询  taskCandidateUser
+	 * @param 
+	 * @return 
+	 * @throws Exception 
+	 */
+	@RequestMapping(value = "/findTaskList", method = RequestMethod.POST)
+	@ResponseBody
+	 public Map<String, Object> findTaskList(HttpServletRequest request) throws Exception{
+		
+		   User user =(User) request.getSession().getAttribute("loginUser");
+			String username=user.getUsername();
+			
+			List<Map<String, Object>> levaList=new ArrayList<Map<String,Object>>();
+			Map<String, Object> json=new HashMap<String, Object>();
+
+			String userid=user.getUserid()+"";
+	     /*	List<Task> list = taskService.createTaskQuery().taskCandidateOrAssigned(username)
+				                          // .taskCandidateUser(username)   
+				                           .list(); //查询获选人	
+*/	   
+	     	List<Task> list  = taskService.createTaskQuery().taskCandidateOrAssigned(userid)
+            // .taskCandidateUser(username)   
+             .list(); //查询获选人	
+	     	
+	     	  // 已经签收的任务
+	   /*     List<Task> todoList = taskService.createTaskQuery().taskAssignee(username).active().list();
+	        for (Task task : todoList) {
+	        	   Map<String, Object> singleTask = packageTaskInfo(task);
+		            singleTask.put("assignee", task.getAssignee());      //办理人为当前yonghu
+		            singleTask.put("status", "claim");
+		            levaList.add(singleTask);
+	        }
+*/
+	        // 等待签收的任务
+	   /*     List<Task> toClaimList = taskService.createTaskQuery().taskCandidateUser(username).active().list();
+	        for (Task task : toClaimList) {
+
+	            Map<String, Object> singleTask = packageTaskInfo(task);
+	            singleTask.put("assignee",task.getAssignee());      //办理人为当前yonghu
+	            singleTask.put("status", "claim");
+	            levaList.add(singleTask);
+	        }
+*/
+	        
+	      //  taskService.claim("75060", "李新华");
+	        
+			int count=(int)taskService.createTaskQuery()  
+	                           .taskCandidateUser(userid)   
+							   .count();
+			 
+					if (list != null && list.size() > 0) {
+						for (Task task : list) {
+							Map<String, Object> map=new HashMap<String, Object>();
+							String title= runtimeService.getVariable(task.getExecutionId(),"title").toString();
+							
+							System.out.println("任务ID：" + task.getId());
+							System.out.println("任务名称：" + task.getName());
+							System.out.println("任务创建时间：" + task.getCreateTime());
+							System.out.println("任务的办理人：" + task.getAssignee());
+							System.out.println("流程实例ID：" + task.getProcessInstanceId());
+							System.out.println("执行对像ID：" + task.getExecutionId());
+							System.out.println("流程定义ID：" + task.getProcessDefinitionId());
+                            System.out.println("任务id："+task.getId()+"\n"+task.getDescription()+"\n"+
+							                            task.getCategory()+"\n"+task.getExecutionId()+"\n"+
+                            		                    task.getFormKey()+"\n"+task.getOwner()+"\n"+
+							                            task.getParentTaskId()+"\n"+task.getPriority()+"\n"+
+                            		                    task.getProcessDefinitionId()+"\n"+task.getProcessInstanceId()+"\n"+
+							                            task.getTaskDefinitionKey()+"\n"+task.getTenantId()+"\n"+
+                            		                    task.getCreateTime()+"\n"+task.getProcessVariables()+"\n"+
+							                            task.getTaskLocalVariables()+"\n"+task.getAssignee()+"");
+                   System.out.println(task.getFormKey()+"ssss"+ task.getProcessDefinitionId()+task.getOwner());
+                   Map<String, Object> ma=new HashMap<String, Object>();
+                 //  taskService.claim("75060", "应小兰");
+               //    ma.put("sign", "true");  
+                // taskService//与正在执行的任务管理相关的Service
+         		 // .complete(task.getId(),ma);
+                	// List<IdentityLink> sdsString=  taskService.getIdentityLinksForTask(task.getId()); 	
+                	//activitiService.backTaskTab(task.getId());
+                	//purchaseService.fidbusiness();
+                	        map.put("taskid", task.getId());    //任务id
+							map.put("name", task.getName());   //任务名称
+							map.put("createTime", task.getCreateTime());  //创建时间 
+							map.put("assignee", username);      //办理人为当前yonghu
+							map.put("url",task.getFormKey());   //当前任务路径
+							
+							map.put("title",title);  //流程标题
+							map.put("processInstanceId", task.getProcessInstanceId());  //流程实例id
+
+							levaList.add(map);
+	
+						    }
+						json.put("rows", levaList);
+						json.put("total", count);
+				     	}else {
+				     	json.put("rows", "");
+				     	json.put("total",0);
+						}
+				
+			        return json;  
+
+		  
+	  }
+	
+//获取参数
+    @SuppressWarnings("unused")
+	private Map<String, Object> packageTaskInfo(Task task) {
+    	 Map<String, Object> singleTask = new HashMap<String, Object>();
+    	 
+    	String title= runtimeService.getVariable(task.getExecutionId(),"title").toString();
+    	singleTask.put("taskid", task.getId());    //任务id
+    	singleTask.put("name", task.getName());   //任务名称
+    	singleTask.put("createTime", task.getCreateTime());  //创建时间 
+    	
+    	singleTask.put("url",task.getFormKey());   //当前任务路径
+			
+    	singleTask.put("title",title);  //流程标题
+    	singleTask.put("processInstanceId", task.getProcessInstanceId());  //流程实例id
+
+        return singleTask;
+    }
+	
+	/** 
+	 * 查询历史流程实例 
+	 */  
+/*	@RequestMapping(value = "/history_pit", method = RequestMethod.GET)
+	public ModelAndView getHistoryProcessInstance(){ 
+               ModelAndView mv=new ModelAndView();
+		       mv.setViewName("personManagem/historyTaskList");
+		     return mv;
+	}
+	
+	@RequestMapping(value = "/history_pit", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> getHistoryProcessInstance(HttpServletRequest request){ 
+		 Map<String, Object> json=new HashMap<String, Object>();
+	    HistoricProcessInstanceQuery query = processEngine.getHistoryService().createHistoricProcessInstanceQuery();
+        query.orderByProcessDefinitionId().desc();
+        query.orderByProcessInstanceEndTime().asc();
+        List<HistoricProcessInstance> list = query.list();
+    	json.put("rows",list);
+		json.put("total",100);
+		return json;
+        
+	}
+*/
+	
+	@RequestMapping(value = "/historyTaskList", method = RequestMethod.GET)
+	public ModelAndView historyTaskList(){  
+		ModelAndView mv=new ModelAndView();
+		
+		mv.setViewName("personManagem/historyTaskList");
+		return mv;
+	}
+	// 查询历史记录
+	@RequestMapping(value = "/historyTaskList", method = RequestMethod.POST)
+	@ResponseBody
+	public  Map<String, Object> historyTaskList(HttpServletRequest request) throws Exception{  
+
+	    
+	    Ref<Integer> record = new Ref<Integer>();
+
+		StringBuilder sbf = new StringBuilder();// 拼接sql
+		   User user =(User) request.getSession().getAttribute("loginUser");
+					String username=user.getUsername();
+		
+		StringBuilder fields = new StringBuilder();// 需要显示字段
+		fields.append(" a.PROC_INST_ID_,a.NAME_,a.ASSIGNEE_,a.START_TIME_,a.END_TIME_,b.BUSINESS_KEY_,b.*,res.TEXT_");
+		Map<String, Object> json = new HashMap<String, Object>();
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+	
+		sbf.append("ACT_HI_PROCINST b LEFT JOIN act_hi_taskinst a ON a.PROC_INST_ID_=b.PROC_INST_ID_");
+		sbf.append(" LEFT JOIN  ACT_HI_VARINST res ON res.PROC_INST_ID_ =  a.PROC_INST_ID_");
+		sbf.append(" WHERE a.ASSIGNEE_ = '"+username+"' AND res.NAME_='title'");
+	
+		List<Map<String, Object>> data = userService.userList(pageIndex,
+				pageSize, record, sbf.toString(), fields.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+	  		
+	}
+	 
+	/**
+	 * @author mr liao
+	 * 签收任务
+	 * 
+	 * */
+	/*
+	@RequestMapping(value = "/taskclaim", method = RequestMethod.GET) 
+	@ResponseBody
+	public  Object taskclaim(@Param("taskid") String taskid,Model model,HttpSession session, RedirectAttributes redirectAttributes) {
+		Map<String, Object> json= new HashMap<String, Object>();
+		try {
+			  User user =(User)session.getAttribute("loginUser");
+				String username=user.getUsername();
+
+	     //   taskService.claim(taskid,username);
+	      
+				json.put("Success", true);
+				json.put("Msg", "已签收");
+			} catch (Exception e) {
+				json.put("Msg", "签收失败");
+				json.put("Success", false);
+			
+		}
+		 
+	
+	
+        return json;
+		 
+	}*/
+
+}

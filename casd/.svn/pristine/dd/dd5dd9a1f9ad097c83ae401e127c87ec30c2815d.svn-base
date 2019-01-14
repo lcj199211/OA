@@ -1,0 +1,235 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+	<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<head>
+<title></title>
+
+<jsp:include page="../common/css.jsp"></jsp:include>
+<jsp:include page="../common/scripts.jsp"></jsp:include>
+
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/admin_grid.js"
+	type="text/javascript"></script>
+<script
+	src="<%=request.getContextPath()%>/res/admin/scripts/ueditor/third-party/codemirror/codemirror.js"
+	type="text/javascript"></script>
+
+<style type="text/css">
+fieldset {
+	border: solid 1px #aaa;
+}
+
+.hideFieldset {
+	border-left: 0;
+	border-right: 0;
+	border-bottom: 0;
+}
+
+.hideFieldset .fieldset-body {
+	display: none;
+}
+</style>
+</head>
+<body>
+	<h1></h1>
+<fieldset id="fd1" style="width:880px;">
+		<legend>
+			<span>请假单</span>
+		</legend>
+
+	<div class="fieldset-body">
+		<form id="form1" method="post">
+		<table class="form-table" border="0" style="margin: 10px">
+		 
+			 <tr>
+				<td class="form-label" style="width:60px;">申请人：</td>
+				<td style="width:150px"><input name="applicant" id="Applicant"
+					class="mini-textbox" value="${leave.applicant}" /></td>
+
+					<td class="form-label" style="width:70px;">岗位/职位：</td>
+				<td style="width:150px"><input name="position" id="position"
+					class="mini-textbox" value="${leave.position}"/></td>
+			</tr>
+				<tr><td class="form-label" style="width:60px;">部门：</td>
+				<td style="width:150px"><input name="department"
+					id="department" class="mini-textbox" value="${leave.department}"/></td>
+
+			
+</tr>
+		
+			<tr>
+				<td class="form-label">请假时间：</td>
+				<td><input class="easyui-datebox" value="${leave.start_time}"
+					name="start_time" id="start_time" style="width:144px" value="Date"></td>
+				<td class="form-label">至：</td>
+				<td><input class="easyui-datebox" value="${leave.end_time}"
+					name="end_time" id="end_time" style="width:144px" value="Date"></td>
+		
+				
+			</tr>
+			<tr>
+			
+			<td class="form-label" style="width:60px;">请假类别：</td>
+				<td style="width:150px"><select name="leave_category"
+				id="leave_category" style="width:120px;">
+						<option name="" value="0">事假</option>
+						<option name="" value="1">病假</option>
+						<option name="" value="2">婚假</option>
+						<option name="" value="3">产假</option>
+						<option name="" value="4">丧假</option>
+						<option name="" value="5">年假</option>
+						<option name="" value="6">其他</option>
+				</select></td>
+			
+			
+			<td>共计:</td><td><input style="width:50" name="day_count" id="day_count"
+					class="mini-textbox" readonly="readonly" value="${leave.day_count}" /> 天 <input
+					style="width:50" name="time_count" id="time_count"
+					class="mini-textbox" value="${leave.time_count}" /> 时</td></tr>
+			<tr>
+				<td class="form-label" style="width:60px;">事由：</td>
+				<td colspan="3"><textarea style="width:370px;height:100px"
+						name="reason" id="reason">${leave.reason}</textarea>
+					</td>
+			</tr> 
+		
+		</table>
+		</form>
+		<div style="margin:20px 0;">
+			<td style="width:150px">请选择：</td>
+		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="choice()">点击审批人</a>
+		
+	</div>
+	<div id="w" class="easyui-window" title="选择审批人" data-options="modal:true,closed:true," style="width:500px;height:200px;padding:10px;">
+		
+		<tr>
+			<td class="form-label" style="width:60px;">请选择：</td>
+				<td style="width:150px"><select  id="username_id" style="width:120px;">
+				<option value="">请选择审批人</option>
+				  
+				</select></td>
+				</tr>
+				
+				<div style="padding-left: 230px">
+
+				<a class="easyui-linkbutton"
+				 id="btnSave" onclick="btnSave();">提交</a>
+					&nbsp;&nbsp;&nbsp;&nbsp; <a class="easyui-linkbutton"
+				 id="btnBack" onclick="quxiao();">取消</a>
+
+
+		</div>
+	</div>
+		
+	</div>
+
+	<div>
+		<tr>
+			<td style="width:0px;" class="form-label"></td>
+
+			<td class="form-label" style="width:500px">注:<br />
+				1、事假、婚假、产假、年假必须提前写好请假单,待批准后方可休假;<br />
+				2、如病假或特殊情况的事假者应先电话请假,并于假后补上有效证明;<br />
+			 3、凡未办理请假手续休假者按相关规定处理.
+			</td>
+		</tr>
+	
+	</div>
+
+
+</fieldset>
+	<script type="text/javascript">
+	
+	$(function(){
+		
+		
+		//计算时间
+	 $('#end_time').datebox({
+		onSelect: function(date){
+			
+			var start_time = $('#start_time').datetimebox('getValue');
+			if(start_time==''){
+				alert("请先选择开始时间!");
+				return false;
+			}
+		
+			var end_time = $('#end_time').datetimebox('getValue');
+			var sdate = new Date(start_time); 
+			var now = new Date(end_time); 
+			var days = now.getTime() - sdate.getTime(); 
+			var day = parseInt(days / (1000 * 60 * 60 * 24)); 		
+		 $("#day_count").val(day);
+		}
+	});
+	})
+	
+
+	   function btnSave(){
+		   //数据提交
+		   var day_count=$("#day_count").val();
+		   var username_id=$("#username_id option:selected").val();
+
+		   if(day_count==''){
+				$.messager.alert("提示", "请选择请假的天数"); 
+				return false;
+		    }
+		   if(username_id==''){
+				$.messager.alert("提示", "请选择审批人"); 
+				return false;
+		    }
+			$.messager.confirm('提示！', '你确定提交吗?', function(r){
+				if (r){
+					// exit action;
+		     	$.post("save_Leave.do?username="+username_id,$("#form1").serialize(),
+					function(data) {
+				if (data.msg != undefined) {
+					$.messager.alert("提示", data.msg, "error");
+					$('#data').datagrid('reload');
+				} else {
+					$.messager.alert("提示", "操作成功！", "info", function() {
+						   location.href="leavePersonal.do";
+						});
+			
+					  location.href="leavePersonal.do";
+				}
+			  
+			});
+				}});
+		          
+		
+	   
+	   }
+	   
+	   function choice(){
+		   var day_count=$("#day_count").val();
+		   if(day_count==''){
+				$.messager.alert("提示", "请选择请假的天数"); 
+				return false;
+		    }
+			$.ajax({
+				type : 'GET',
+				url : 'choice_examine.do',
+				data : {'day_count':day_count,
+				
+				},
+				success : function(data) {
+					$('#w').window('open');
+					var list = eval(data);
+					for (var i = 0; i < list.length; i++) {
+					    $("#username_id").append("<option value='" + list[i].username + "'>" + list[i].username + "</option>"); 
+					}
+					
+					
+				}
+		   
+			});
+	   }
+	   function quxiao(){
+	
+		   location.href="personal_task.do";
+	   }
+	
+	
+	</script>
+
+</body>

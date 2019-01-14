@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.manage.SupplierformDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+    <insert id="saveSupplierform" useGeneratedKeys="true" keyProperty="supplierform_id" parameterType="com.casd.entity.manage.Supplierform">
+   		
+   		INSERT INTO manage_supplierform (supplierform_id,supplierform_date,supplierform_loadcenter,supplierform_fileway) 
+        VALUES (#{supplierform_id},#{supplierform_date},#{supplierform_loadcenter},#{supplierform_fileway})
+   		on duplicate key update supplierform_id=#{supplierform_id},supplierform_date=#{supplierform_date},
+	    						supplierform_loadcenter=#{supplierform_loadcenter},supplierform_fileway=#{supplierform_fileway}
+   </insert>
+   
+  
+   
+    <select id="getSupplierform" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+    <select id="getData" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+   
+   
+   <delete id="delete_Supplierform" parameterType="map">
+		delete	 from ${what}
+	</delete>
+   
+
+   
+</mapper>

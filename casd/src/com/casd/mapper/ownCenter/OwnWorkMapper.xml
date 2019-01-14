@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.ownCenter.OwnWorkDao">
+
+	<insert id="save_workArrang" useGeneratedKeys="true" keyProperty="own_workArrangHead_id"
+		parameterType="com.casd.entity.ownCenter.OwnWorkHead">
+		INSERT INTO own_workArrangHead
+		(own_workArrangHead_id,own_workArrangHead_category,own_workArrangHead_centerId,own_workArrangHead_companyId)
+		VALUES
+		(#{own_workArrangHead_id},#{own_workArrangHead_category},#{own_workArrangHead_centerId},#{own_workArrangHead_companyId})
+		on duplicate key update own_workArrangHead_id=#{own_workArrangHead_id},own_workArrangHead_category=#{own_workArrangHead_category},
+	    						own_workArrangHead_centerId=#{own_workArrangHead_centerId},own_workArrangHead_companyId=#{own_workArrangHead_companyId}
+		
+	</insert>
+
+	<insert id="save_workArrangEntry" useGeneratedKeys="true"
+		keyProperty="own_workArranged_id" parameterType="com.casd.entity.ownCenter.OwnWorkEntry">
+		INSERT INTO own_workarranged
+		(own_workArranged_id,own_workArranged_categoryId,own_workArranged_content,own_workArranged_arranger,
+		own_workArranged_sponsor,own_workArranged_coordinator,own_workArranged_current,own_workArranged_feedback,own_workArranged_assist,
+		own_workArranged_planTime,own_workArranged_finishTime,own_workArranged_status,own_workArranged_remarks,own_workArranged_creatTime)
+		VALUES
+		(#{own_workArranged_id},#{own_workArranged_categoryId},#{own_workArranged_content},#{own_workArranged_arranger},#{own_workArranged_sponsor},
+		#{own_workArranged_coordinator},#{own_workArranged_current},#{own_workArranged_feedback},#{own_workArranged_assist},
+		#{own_workArranged_planTime},#{own_workArranged_finishTime},#{own_workArranged_status},#{own_workArranged_remarks},#{own_workArranged_creatTime})
+		
+		on duplicate key update own_workArranged_id=#{own_workArranged_id},own_workArranged_categoryId=#{own_workArranged_categoryId},
+	    						own_workArranged_content=#{own_workArranged_content},own_workArranged_arranger=#{own_workArranged_arranger},
+								own_workArranged_sponsor=#{own_workArranged_sponsor},own_workArranged_coordinator=#{own_workArranged_coordinator},
+								own_workArranged_current=#{own_workArranged_current},own_workArranged_feedback=#{own_workArranged_feedback},
+								own_workArranged_assist=#{own_workArranged_assist},own_workArranged_planTime=#{own_workArranged_planTime},
+								own_workArranged_finishTime=#{own_workArranged_finishTime},own_workArranged_status=#{own_workArranged_status},
+								own_workArranged_remarks=#{own_workArranged_remarks},own_workArranged_creatTime=#{own_workArranged_creatTime}
+	</insert>
+
+
+	<select id="ownWorkList" parameterType="map" resultType="map">
+		select * from ${where} ${limit}
+	</select>
+
+	<select id="getOwnWorkCount" parameterType="map" resultType="int">
+		select COUNT(1) from ${where}
+	</select>
+
+	<select id="getOwnWorkHead" parameterType="map" resultType="com.casd.entity.ownCenter.OwnWorkHead">
+		select ${fields} from ${where}
+	</select>
+	<select id="getOwnWorkEntry" parameterType="map" resultType="map">
+		select arranged.*,(select us1.username from uc_user us1 where arranged.own_workArranged_arranger= us1.userid) own_workArranged_arranger_name,
+		(select us2.username from uc_user us2 where arranged.own_workArranged_sponsor= us2.userid) own_workArranged_sponsor_name
+		from own_workarranged arranged where arranged.own_workArranged_categoryId= #{own_workArranged_categoryId}
+	</select>
+
+   <delete id="delete_worker" parameterType="map">
+       DELETE FROM ${where}
+   </delete>
+    
+	<select id="getCompany" parameterType="map" resultType="int">
+       select center_companyId from uc_center where center_id=#{center_id}
+   </select>
+
+	<select id="selectArrCount" parameterType="map" resultType="int" >
+		select count(1) from own_workarranged where 1=1 ${what}
+	</select>
+
+	<select id="update_work" parameterType="com.casd.entity.ownCenter.OwnWorkEntry">
+		update own_workarranged
+		<trim prefix="set" suffixOverrides=",">
+			<if test="own_workArranged_categoryId!=0">
+				own_workArranged_categoryId=#{own_workArranged_categoryId},
+			</if>
+			<if test="own_workArranged_content!= null and own_workArranged_content!='' ">
+				own_workArranged_content=#{own_workArranged_content},
+			</if>
+			<if test="own_workArranged_arranger!=0">
+				own_workArranged_arranger=#{own_workArranged_arranger},
+			</if>
+			<if test="own_workArranged_sponsor!= 0">
+				own_workArranged_sponsor=#{own_workArranged_sponsor},
+			</if>
+			<if test="own_workArranged_coordinator!= 0">
+				own_workArranged_coordinator=#{own_workArranged_coordinator},
+			</if>
+			<if test="own_workArranged_current!= null and own_workArranged_current!='' ">
+				own_workArranged_current=#{own_workArranged_current},
+			</if>
+			<if test="own_workArranged_feedback!=  null and own_workArranged_feedback!='' ">
+				own_workArranged_feedback=#{own_workArranged_feedback},
+			</if>
+			<if test="own_workArranged_assist!=null and own_workArranged_assist!='' ">
+				own_workArranged_assist=#{own_workArranged_assist},
+			</if>
+			<if test="own_workArranged_planTime!=null and own_workArranged_planTime!='' ">
+				own_workArranged_planTime=#{own_workArranged_planTime},
+			</if>
+			<if test="own_workArranged_finishTime != null and own_workArranged_finishTime!='' ">
+				own_workArranged_finishTime=#{own_workArranged_finishTime},
+			</if>
+			<if test="own_workArranged_status!=0">
+				own_workArranged_status=#{own_workArranged_status},
+			</if>
+			<if test="own_workArranged_remarks!=null and own_workArranged_remarks!='' ">
+				own_workArranged_remarks=#{own_workArranged_remarks},
+			</if>
+			<if test="own_workArranged_creatTime!=null and own_workArranged_creatTime!='' ">
+				own_workArranged_creatTime=#{own_workArranged_creatTime},
+			</if>
+			<if test="own_workArranged_finishQua!=0">
+				own_workArranged_finishQua=#{own_workArranged_finishQua},
+			</if>
+		</trim>
+		where own_workArranged_id=#{own_workArranged_id}
+	</select>
+     
+</mapper>

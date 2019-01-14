@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.APartyDao">
+
+	<select id="getList" parameterType="map" resultType="map">
+		select * from ${where} ${limit}
+	</select>
+	<select id="getCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	
+	<select id="getData" parameterType="map" resultType="map">
+		select ${fields} from ${where} 
+	</select>
+
+	
+	<insert id="save_aPartyMaterial" parameterType="com.casd.entity.construct.ApartyMaterial">
+		insert into construct_aparty_material
+		(construct_Aparty_material_id,construct_Aparty_material_name,construct_Aparty_material_unit,construct_Aparty_material_category,
+		construct_Aparty_material_num,construct_Aparty_material_remark,construct_Aparty_material_constructId,construct_Aparty_material_model
+		)
+		VALUES
+		(
+		#{construct_Aparty_material_id},#{construct_Aparty_material_name},#{construct_Aparty_material_unit},#{construct_Aparty_material_category},
+		#{construct_Aparty_material_num},#{construct_Aparty_material_remark},#{construct_Aparty_material_constructId},#{construct_Aparty_material_model}
+		)
+		on duplicate key update
+		construct_Aparty_material_id=#{construct_Aparty_material_id},construct_Aparty_material_name=#{construct_Aparty_material_name},
+		construct_Aparty_material_unit=#{construct_Aparty_material_unit},construct_Aparty_material_category=#{construct_Aparty_material_category},
+		construct_Aparty_material_num=#{construct_Aparty_material_num},construct_Aparty_material_remark=#{construct_Aparty_material_remark},
+		construct_Aparty_material_constructId=#{construct_Aparty_material_constructId},construct_Aparty_material_model=#{construct_Aparty_material_model}
+	</insert>
+	
+	<delete id="delete_aPartyMaterial" parameterType="map">
+		DELETE FROM construct_aparty_material ${where} 
+	</delete>
+	
+	
+	<insert id="save_aPartyPurHead" useGeneratedKeys="true" keyProperty="construct_Aparty_purchase_id" parameterType="com.casd.entity.construct.ApartyPur">
+		insert into construct_aparty_purchase
+		(construct_Aparty_purchase_id,construct_Aparty_purchase_constructId,construct_Aparty_purchase_orderNum,construct_Aparty_purchase_supplier,
+		construct_Aparty_purchase_contacts,construct_Aparty_purchase_tel,construct_Aparty_purchase_status,construct_Aparty_purchase_remarks
+		)
+		VALUES
+		(
+		#{construct_Aparty_purchase_id},#{construct_Aparty_purchase_constructId},#{construct_Aparty_purchase_orderNum},#{construct_Aparty_purchase_supplier},
+		#{construct_Aparty_purchase_contacts},#{construct_Aparty_purchase_tel},#{construct_Aparty_purchase_status},#{construct_Aparty_purchase_remarks}
+		)
+		on duplicate key update
+		construct_Aparty_purchase_id=#{construct_Aparty_purchase_id},construct_Aparty_purchase_constructId=#{construct_Aparty_purchase_constructId},
+		construct_Aparty_purchase_orderNum=#{construct_Aparty_purchase_orderNum},construct_Aparty_purchase_supplier=#{construct_Aparty_purchase_supplier},
+		construct_Aparty_purchase_contacts=#{construct_Aparty_purchase_contacts},construct_Aparty_purchase_tel=#{construct_Aparty_purchase_tel},
+		construct_Aparty_purchase_status=#{construct_Aparty_purchase_status},construct_Aparty_purchase_remarks=#{construct_Aparty_purchase_remarks}
+	</insert>
+	
+	
+	<insert id="save_aPartyPurEntry"  parameterType="com.casd.entity.construct.ApartyPurEntry">
+		insert into construct_aparty_purentry
+		(construct_Aparty_purEntry_id,construct_Aparty_purEntry_materialId,construct_Aparty_purEntry_num,construct_Aparty_purEntry_remark,
+		construct_Aparty_purEntry_parentId
+		)
+		VALUES
+		(
+		#{construct_Aparty_purEntry_id},#{construct_Aparty_purEntry_materialId},#{construct_Aparty_purEntry_num},#{construct_Aparty_purEntry_remark},
+		#{construct_Aparty_purEntry_parentId}
+		)
+		on duplicate key update
+		construct_Aparty_purEntry_id=#{construct_Aparty_purEntry_id},construct_Aparty_purEntry_materialId=#{construct_Aparty_purEntry_materialId},
+		construct_Aparty_purEntry_num=#{construct_Aparty_purEntry_num},construct_Aparty_purEntry_remark=#{construct_Aparty_purEntry_remark},
+		construct_Aparty_purEntry_parentId=#{construct_Aparty_purEntry_parentId}
+	</insert>
+	
+	
+	
+</mapper>
+
+

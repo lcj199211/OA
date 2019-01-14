@@ -1,0 +1,56 @@
+var wrapper = document.getElementById("signature-pad"),
+    clearButton = wrapper.querySelector("[data-action=clear]"),
+    savePNGButton = wrapper.querySelector("[data-action=save-png]"),
+    saveSVGButton = wrapper.querySelector("[data-action=save-svg]"),
+    canvas = wrapper.querySelector("canvas"),
+    signaturePad;
+
+function resizeCanvas() {
+    var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+}
+
+window.onresize = resizeCanvas;
+resizeCanvas();
+
+signaturePad = new SignaturePad(canvas);
+
+clearButton.addEventListener("click", function (event) {
+    signaturePad.clear();
+});
+
+savePNGButton.addEventListener("click", function (event) {
+    if (signaturePad.isEmpty()) {
+        alert("请先提供签名。");
+    } else {
+    	 post('tojson.do', {'lines' :signaturePad.toDataURL()});
+    }
+});
+
+saveSVGButton.addEventListener("click", function (event) {
+    if (signaturePad.isEmpty()) {
+        alert("请先提供签名。");
+    } else {
+    	 post('tojson.do', {'lines' :signaturePad.toDataURL()});
+    }
+});
+
+
+function post(URL, PARAMS) {
+    var temp = document.createElement("form");
+    temp.action = URL;
+    temp.method = "post";
+    temp.style.display = "none";
+    for (var x in PARAMS) {
+        var opt = document.createElement("textarea");
+        opt.name = x;
+        opt.value = PARAMS[x];
+        // alert(opt.name)
+        temp.appendChild(opt);
+    }
+    document.body.appendChild(temp);
+    temp.submit();
+    return temp;
+}

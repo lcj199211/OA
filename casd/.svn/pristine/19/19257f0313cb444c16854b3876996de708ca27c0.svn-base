@@ -1,0 +1,295 @@
+package com.casd.controller.personManagem;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONObject;
+
+import org.activiti.engine.TaskService;
+import org.activiti.engine.impl.persistence.entity.CommentEntity;
+import org.activiti.engine.task.Comment;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.uc.UserDao;
+import com.casd.entity.flow.FlowAudit;
+import com.casd.entity.hr.Become;
+import com.casd.entity.hr.HrMembe;
+import com.casd.entity.ownCenter.Leave;
+import com.casd.entity.uc.User;
+import com.casd.service.flow.FlowService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.hr.HregisterService;
+import com.casd.service.uc.UserService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class BecomeController {
+	
+	@Autowired
+	private UserDao userDao;
+	@Autowired
+	private UserService userService;
+	
+	@Autowired
+	private HregisterService hrService;
+	
+	@Autowired
+	private ActivitiService activitiService;
+	
+	@Autowired
+	private TaskService taskService;
+	
+	/**
+	 * 
+	 * */
+	@RequestMapping(value = "/becomeList", method = RequestMethod.GET)
+	public ModelAndView becomeList() {
+		ModelAndView mv=new ModelAndView();
+		mv.setViewName("personManagem/becomeList");
+		return mv;
+		
+	}
+	
+	@RequestMapping(value = "/becomeList", method = RequestMethod.POST)
+	@ResponseBody
+	public Object becomeList(HttpServletRequest request) throws Exception {
+	
+		
+		Ref<Integer> record = new Ref<Integer>();
+		StringBuilder sbf = new StringBuilder();
+		StringBuilder fields = new StringBuilder();
+		// 显示字段
+		fields.append("a.userid,a.username,a.role_id,c.role_name,a.close_time,a.`status`");
+
+		Map<String, Object> json = new HashMap<String, Object>();
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		sbf.append(" uc_user a");
+	
+		sbf.append(" LEFT JOIN uc_role c  ON a.role_id=c.role_id");
+        sbf.append(" where a.status="+3);
+		List<Map<String, Object>> data = userService.userList(pageIndex,
+				pageSize, record, sbf.toString(), fields.toString());
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+		
+	     }
+
+	
+		
+	  /**
+	   *  保存转正申请
+	   * **/
+	  @RequestMapping(value = "/submitBecome", method = RequestMethod.POST)
+	  @ResponseBody
+	 public void submitBecome(HttpServletRequest request,Become become) throws Exception {
+		  Map<String, Object> json=new HashMap<String, Object>();
+		  try {
+		
+			User user = (User) request.getSession().getAttribute("loginUser");
+			String name = user.getUserid()+"";// 获取申请人
+		   hrService.insertBecome(become,name);
+
+				json.put("Success", true);
+				json.put("Msg", "保存成功！");
+			} catch (Exception e) {
+				json.put("Msg", "保存失败,请联系技术员！");
+				json.put("Success", false);
+					
+			}
+		
+	  
+		  
+	  }
+	 
+	 
+	        
+	      	/**
+	  		 * 跳转审核界面
+	  	     * 
+	  		 */
+	  
+	  		@RequestMapping(value = "/auditBecome", method = RequestMethod.GET)	
+	  		public ModelAndView auditBecome(HttpServletRequest request, Model model) throws Exception {
+	  			 ModelAndView mv=new ModelAndView();
+	  		
+	  			String taskid = request.getParameter("taskid");// 获取任务id
+	  			String taskName = request.getParameter("taskName");//任务节点
+	  			String bizkey = activitiService.getBusinessBizId(taskid);// 获取业务编号
+	  			String[] strs = bizkey.split("\\.");
+	  			String bizId = null; // 业务编号
+	  			for (int i = 0, len = strs.length; i < len; i++) {
+	  				bizId = strs[i].toString();
+	  			}
+	  			Map<String, Object> map = new HashMap<String, Object>();
+	  			map.put("id", bizId);
+	        	 StringBuilder string = new StringBuilder();
+				  String field=" u.* ";
+				  string.append(" uc_become u where 1=1");
+				  string.append(" and bc_id="+bizId);
+			Map<String, Object> data = userService.queryUserById(field, string.toString());
+				 
+					JSONObject jsonObject = new JSONObject();
+			
+					model.addAttribute("mpaList", data);
+					
+				List<Map<String, Object>> userList =hrService.becomeUser(taskid);//查看审核人
+			
+				List<Map<String, Object>> historyList = activitiService.getProcessComments(taskid);// 查询审批记录
+
+	  		
+	  			model.addAttribute("historyList", historyList);
+	  			
+	  		/*	for (Comment history : comments) {
+	  				Map<String, Object> vars = new HashMap<String, Object>();
+
+	  				vars.put("userId", history.getUserId()); // 审核人
+	  				vars.put("fullMessage", history.getFullMessage()); // 审核意见
+	  				historyList.add(vars);
+
+	  			}*/
+	  		
+	  		/*	jsonObject.put("history", historyList);
+	  			model.addAttribute("history", jsonObject);*/
+
+	  			mv.addObject("userList", userList);
+	  			mv.addObject("taskid", taskid);
+	  		    mv.addObject("taskName", taskName);
+
+	  			mv.setViewName("personManagem/auditBecome");
+	  			return mv;
+	  		}
+	  		
+	  		/**
+	  		 * 转正申请审核
+	  		 * */
+	 		@RequestMapping(value = "/become_pass", method = RequestMethod.POST)	
+	 		@ResponseBody
+	  		public Map<String, Object> becomepass(HttpServletRequest request) throws Exception{
+	 		
+	 			Map<String, Object> json = new HashMap<String, Object>();
+	 			try {
+	 				hrService.becomepass(request);
+	 				json.put("Success", true);
+	 				json.put("Msg", "已审核!");
+	 			} catch (Exception e) {
+	 				e.printStackTrace();
+	 				json.put("Success", false);
+	 				json.put("Msg", "程序出错,请联系技术员");
+	 			}
+				return json;
+	 			
+	 		}
+	  
+	 		@RequestMapping(value = "/Become_for", method = RequestMethod.GET)
+	 		public ModelAndView becomeView(HttpServletRequest request,Model model) throws Exception {
+	        	ModelAndView mv=new ModelAndView();
+	        	StringBuffer sbf=new StringBuffer();	
+
+	        	String userid=request.getParameter("userid");
+	        	String status=request.getParameter("status");
+
+	        	 StringBuilder string = new StringBuilder();
+				  String field=" u.userid,u.username,u.department,u.education,u.major,u.on_trial,u.incorporation_date,u.close_time,b.role_name,c.department_name";
+				  string.append(" uc_user u LEFT JOIN uc_role b  on u.role_id=b.role_id");
+				  string.append(" LEFT join  uc_department c on u.department=c.department_id where u.userid="+userid);
+				 Map<String, Object> data = userService.queryUserById(field, string.toString());
+	        	
+	        	
+	        	JSONObject map = new JSONObject();
+	        	JSONObject jsonObject = new JSONObject();
+	            String fields=" b.*";
+
+	           sbf.append(" uc_user a join uc_become b on a.userid=b.user_id");
+	           
+	           sbf.append(" where 1=1");
+	           if (userid==null) {
+	        	  String bizId= request.getParameter("bizId");
+	        	  sbf.append(" and b.bc_id="+bizId);
+	          }else {
+	        	  sbf.append(" and b.user_id="+userid);
+			}
+	        	List<Map<String, Object>> maps=userService.queryId(fields, sbf.toString());
+	        	jsonObject.put("rows", maps);
+				map.put("rows1", jsonObject);
+				mv.addObject("userid", userid);
+				mv.addObject("status", status);
+				model.addAttribute("rows", map);
+				mv.addObject("mpaList",data);
+	        	mv.setViewName("personManagem/becomeView");
+				return mv;
+				
+			}
+
+	 		@RequestMapping(value = "/becomehistory", method = RequestMethod.GET)
+	 		@ResponseBody
+	 		public Map<String, Object> becomehistory(HttpServletRequest request, Model model) throws Exception{
+
+	 			String bizId = request.getParameter("bizid");
+	            String fields=" b.*";
+                StringBuffer sbf=new StringBuffer();
+	             sbf.append(" uc_become b ");
+	             sbf.append(" where b.bc_id="+bizId);
+	          Map<String, Object> maps=userService.queryUserById(fields, sbf.toString());
+
+	 			String beyId = "Become_for"; // 流程实例key 请勿改动
+	 			 List<Map<String, Object>> dataList = activitiService.viewHisComments(bizId, beyId);
+	 			 List<Map<String, Object>> lishi= new ArrayList<Map<String,Object>>();
+	 	      	Map<String, Object> map=null;
+	 			  for (int i = 0; i < dataList.size(); i++){
+	 				
+	 					 map=new HashMap<String, Object>();
+	 			     	boolean bts=	dataList.get(i).containsKey("MESSAGE_");
+	 				  if(bts){
+	 					
+	 					String fullMessage=dataList.get(i).get("MESSAGE_").toString();
+	 				
+	 					String userId=dataList.get(i).get("username").toString();
+	 				
+	 					map.put("userId", userId);
+	 				  if (i>0) {	 				
+		 				String treatment=(fullMessage.split("：")[fullMessage.split("：").length-1]);
+		 				fullMessage=(fullMessage.split("：")[0]);
+		 				map.put("fullMessage", fullMessage);
+	 					map.put("treatment", treatment);
+	 					lishi.add(map);
+						}else {
+							map.put("fullMessage",fullMessage);
+							map.put("treatment", "0");
+							lishi.add(map);
+					
+					  }
+	 				}
+
+				}
+	 			 
+	 			  Map<String, Object> maplist=new HashMap<String, Object>();
+	 			//审核历史意见
+	 			//JSONObject jsonObject = new JSONObject();
+	 			//jsonObject.put("dataList", dataList);
+	 			/*model.addAttribute("dataList", dataList);
+	 			model.addAttribute("list", maps);*/
+	 			 maplist.put("map", map);
+	 			maplist.put("dataList", lishi);
+	 			maplist.put("maps", maps);
+				return maplist;
+		
+           }
+	 		
+	
+}

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.manage.ContractDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+    <insert id="saveContract" useGeneratedKeys="true" keyProperty="manage_contract_id" parameterType="com.casd.entity.manage.Contract">
+   		
+   		INSERT INTO manage_contract  (manage_contract_id,manage_contract_name,manage_contract_company,manage_contract_firstParty,
+   		manage_contract_amount,manage_contract_address,manage_contract_startTime,manage_contract_endTime,manage_contract_visaAmount,
+   		manage_contract_remark,manage_contract_num) 
+        VALUES (#{manage_contract_id},#{manage_contract_name},#{manage_contract_company},#{manage_contract_firstParty},
+        #{manage_contract_amount},#{manage_contract_address},#{manage_contract_startTime},#{manage_contract_endTime}
+        ,#{manage_contract_visaAmount},#{manage_contract_remark},#{manage_contract_num})
+   		on duplicate key update manage_contract_id=#{manage_contract_id},manage_contract_name=#{manage_contract_name},
+	    						manage_contract_company=#{manage_contract_company},manage_contract_firstParty=#{manage_contract_firstParty},
+	    						manage_contract_amount=#{manage_contract_amount},manage_contract_address=#{manage_contract_address},
+	    						manage_contract_startTime=#{manage_contract_startTime},manage_contract_endTime=#{manage_contract_endTime},
+	    						manage_contract_visaAmount=#{manage_contract_visaAmount},manage_contract_remark=#{manage_contract_remark},
+	    						manage_contract_num=#{manage_contract_num}
+   </insert>
+   
+   <insert id="saveReqfunds"  parameterType="com.casd.entity.manage.Reqfunds">
+   		
+   		INSERT INTO manage_reqfunds  (manage_reqfunds_id,manage_reqfunds_contractId,manage_reqfunds_time,manage_reqfunds_amount,
+   		manage_reqfunds_ticketDate,manage_reqfunds_ticketAmount,manage_reqfunds_receiveDate,manage_reqfunds_receiveAmount,manage_reqfunds_remark) 
+        VALUES (#{manage_reqfunds_id},#{manage_reqfunds_contractId},#{manage_reqfunds_time},#{manage_reqfunds_amount},
+        #{manage_reqfunds_ticketDate},#{manage_reqfunds_ticketAmount},#{manage_reqfunds_receiveDate},#{manage_reqfunds_receiveAmount},#{manage_reqfunds_remark})
+   		on duplicate key update manage_reqfunds_id=#{manage_reqfunds_id},manage_reqfunds_contractId=#{manage_reqfunds_contractId},
+	    						manage_reqfunds_time=#{manage_reqfunds_time},manage_reqfunds_amount=#{manage_reqfunds_amount},
+	    						manage_reqfunds_ticketDate=#{manage_reqfunds_ticketDate},manage_reqfunds_ticketAmount=#{manage_reqfunds_ticketAmount},
+	    						manage_reqfunds_receiveDate=#{manage_reqfunds_receiveDate},manage_reqfunds_receiveAmount=#{manage_reqfunds_receiveAmount},
+	    						manage_reqfunds_remark=#{manage_reqfunds_remark}
+   </insert>
+   
+   
+    <select id="getContract" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+    <select id="getReqfunds" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+   
+   
+   <delete id="delete_Contract" parameterType="map">
+		DELETE manage_reqfunds,manage_contract from ${what}
+	</delete>
+   
+    <delete id="delete_Reqfunds" parameterType="map">
+		DELETE from manage_reqfunds where manage_reqfunds_id= ${id} 
+	</delete>
+   
+</mapper>

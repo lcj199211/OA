@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.hr.TemplateModelDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+    <insert id="insertTemplate" useGeneratedKeys="true" keyProperty="hr_templatel_id" parameterType="com.casd.entity.hr.TemplateModel">  
+		insert into hr_template_model (hr_templatel_id,hr_template_name,hr_template_path,hr_templatel_describe,hr_templatel_type,hr_templatel_time) 
+		values (0,#{hr_template_name},#{hr_template_path},#{hr_templatel_describe},#{hr_templatel_type},#{hr_templatel_time}) 
+	</insert>
+    
+    <select id="listTemplate" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+    
+     <select id="countemplate" parameterType="map" resultType="int">
+        select COUNT(1) from ${where}  
+    </select>
+    
+       <select id="findTemplate" parameterType="map" resultType="map">
+        select ${fields} from ${where}  
+     </select>
+     <update id="updateTemplate" parameterType="com.casd.entity.hr.TemplateModel">
+     
+              update hr_template_model 
+          <set>
+         	<if test="hr_template_name!=null">
+         		hr_template_name=#{hr_template_name},
+         	</if>
+         	<if test="hr_template_path!=null">
+         		hr_template_path=#{hr_template_path},
+         	</if>
+         	<if test="hr_templatel_describe!=null">
+         		hr_templatel_describe=#{hr_templatel_describe},
+         	</if>
+         	<if test="hr_templatel_type != 0">
+         		hr_templatel_type=#{hr_templatel_type}
+         	</if>       		
+         </set>
+          where hr_templatel_id=#{hr_templatel_id}
+       </update>
+       
+        <delete id="deleteTemplate" parameterType="map">
+             DELETE from hr_template_model ${where}
+         </delete>
+         
+</mapper>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.flow.FlowDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+	<!-- 初始化页面流程 -->	
+	<select id="findFlow" parameterType="map" resultType="map">
+		select * from  flow_table flow left join flow_node_table node on flow.flow_id=node.flow_node_parentID where flow.flow_id=${id} order by orders
+	</select>
+	
+		<!-- 插入审核记录 -->
+	 <insert id="addFlowAudit" useGeneratedKeys="true" keyProperty="flow_audit_id" parameterType="com.casd.entity.flow.FlowAudit" >
+        INSERT INTO flow_audit_table  
+        (flow_audit_id,flow_bill_id,flow_audit_last_auditid,flow_audit_next_auditid,
+        flow_submitter,flow_auditer,flow_bill_url,flow_audit_time,flow_submit_time,flow_status,flow_bill_type,flow_audit_option,flow_node_order) 
+        VALUES
+        (#{flow_audit_id},#{flow_bill_id},#{flow_audit_last_auditid},#{flow_audit_next_auditid},
+        #{flow_submitter},#{flow_auditer},#{flow_bill_url},#{flow_audit_time,jdbcType=TIMESTAMP},#{flow_submit_time},#{flow_status},
+        #{flow_bill_type},#{flow_audit_option},#{flow_node_order})
+    </insert>
+    
+    
+    
+    <select id="getFlowAudit" parameterType="map" resultType="com.casd.entity.flow.FlowAudit">
+    	select * from flow_audit_table where flow_audit_id=${auditID}
+    </select>
+    
+    <!--查询审核列表  -->
+    <select id="auditList" parameterType="map" resultType="map">
+		select *
+		from ${where} ${limit}
+	</select>
+	<select id="getAuditCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	
+	<!-- 插入第二条后的审核记录后反写上一条的下个节点id -->
+	<!-- <update id="addNextAuditID" parameterType="map" >
+		update flow_audit_table set flow_audit_next_auditid=${id},flow_audit_time='${flow_audit_time}',flow_status=${flow_status},flow_audit_option='${flow_audit_option}'  where flow_audit_id=${where}
+	</update> -->
+    
+    <update id="addNextAuditID" parameterType="map" >
+		 update flow_audit_table
+		 <trim prefix="set" suffixOverrides=",">
+			  <if test="id!=null">flow_audit_next_auditid=${id},</if>
+			  <if test="flow_audit_time!=null">flow_audit_time='${flow_audit_time}',</if>
+			  <if test="flow_status!=null">flow_status=${flow_status},</if>
+			  <if test="flow_audit_option!=null">flow_audit_option='${flow_audit_option}'</if>
+		 </trim>
+		 where flow_audit_id=${where}
+	</update>
+    
+    
+    <!-- 查询流程列表 -->
+	<select id="flowList" parameterType="map" resultType="map">
+		select *
+		from ${where} ${limit}
+	</select>
+
+	<select id="getFlowCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	
+	<!-- 编辑界面初始化 -->
+	<select id="findFlowByID" parameterType="map" resultType="com.casd.entity.flow.Flow">
+		<!-- select * from flow_table where flow_bill_id=${what} -->
+		select * from flow_table where flow_id=${what}
+	</select>
+	<select id="findFlowNode" parameterType="map" resultType="map">
+		select * from flow_node_table where flow_node_parentID=${what}
+	</select>
+	
+	<!-- 查看界面根据billid查审核记录 -->
+	<select id="findAuditByBillId" parameterType="map" resultType="com.casd.entity.flow.FlowAudit">
+		select * from flow_audit_table where flow_bill_id=${id}  order by flow_audit_id 
+	</select>
+	
+	<!-- 审核更新记录 -->
+	<update id="auditBill" parameterType="map">
+		update flow_audit_table set flow_status=3,flow_audit_option='${option}',flow_audit_time='${flow_audit_time}'  where flow_audit_id=${auditID}
+	</update>
+	<update id="updateFlowStatus" parameterType="map">
+		update flow_audit_table set flow_status=1 where flow_audit_last_auditid=${auditID}
+	</update>
+	<select id="findNextNode"  parameterType="map" resultType="int">
+		select flow_audit_next_auditid from flow_audit_table where flow_audit_id=${auditID}
+	</select>
+	
+	<!-- 审核不通过退回-->
+	<update id="backBill" parameterType="map">
+		update flow_audit_table set flow_status=0,flow_audit_option='${option}'  where flow_audit_id=${auditID}
+	</update>
+	
+	
+	<!-- 获取审核单据页面id -->
+	
+	<select id="getBillID" parameterType="map" resultType="int">
+		select flow_bill_id from flow_audit_table where flow_audit_id=${auditID}
+	</select>
+	
+	
+	
+	<insert id="submitFlow" parameterType="com.casd.entity.flow.FlowNode">  
+	    insert into flow_node_table (flow_node_id,flow_node_parentID,flow_node_name,flow_node_processo,`orders`,flow_node_auditors) VALUES  
+	        (#{flow_node_id},#{flow_node_parentID},#{flow_node_name},#{flow_node_processo},#{orders},#{flow_node_auditors})  
+	    on duplicate key update flow_node_id=#{flow_node_id},flow_node_parentID=#{flow_node_parentID},
+	    						flow_node_name=#{flow_node_name},flow_node_processo=#{flow_node_processo},`orders`=#{orders},flow_node_auditors=#{flow_node_auditors}
+	</insert>
+	<insert id="submitFlowHead" useGeneratedKeys="true" keyProperty="flow_id" parameterType="com.casd.entity.flow.Flow">  
+		insert into flow_table (flow_id,flow_name,flow_description) values (#{flow_id},#{flow_name},#{flow_description}) 
+		on duplicate key update flow_id=#{flow_id},flow_name=#{flow_name},flow_description=#{flow_description}
+	
+	</insert>
+	
+	<select id="delectNode" parameterType="map" >
+        DELETE FROM flow_node_table WHERE flow_node_id IN (${what})  
+    </select>
+    <select id="deleNodeByParentid" parameterType="map" >
+        DELETE FROM flow_node_table WHERE flow_node_parentID IN (${what})  
+    </select>
+    <select id="deleFlow" parameterType="map" >
+        DELETE FROM flow_table WHERE flow_id IN (${what})  
+    </select>
+	
+	
+	<select id="getAuditorId" parameterType="map"  resultType="map">
+        select ${fields} from ${where}
+    </select>
+	<select id="getuserNames" parameterType="map"  resultType="map">
+        select ${fields} from ${where}
+    </select>
+    
+        
+        <!-- 4-21 -->
+       <select id="newlis" parameterType="map"  resultType="String">
+      select ${fields} from ${where}
+       </select>
+	
+	
+</mapper>

@@ -1,0 +1,26 @@
+package com.casd.service.supplierMod;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.activiti.engine.delegate.DelegateExecution;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.ownCenter.Leave;
+import com.casd.entity.supplierMod.Worker;
+import com.casd.entity.supplierMod.WorkerApply;
+
+public interface WorkerService {
+
+	Boolean checkWorkerExist(String supplierMod_worker_userId);
+
+	void save_Worker(Worker worker);
+
+	void workerApply(WorkerApply workerApply);
+
+
+		
+	 
+}

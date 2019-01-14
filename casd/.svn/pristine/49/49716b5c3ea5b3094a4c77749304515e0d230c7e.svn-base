@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.APartyDao">
+
+	<select id="getList" parameterType="map" resultType="map">
+		select * from ${where} ${limit}
+	</select>
+	<select id="getCount" parameterType="map" resultType="int">
+		select
+		COUNT(1) from ${where}
+	</select>
+	
+	<select id="getData" parameterType="map" resultType="map">
+		select ${fields} from ${where} 
+	</select>
+
+
+
+
+	<insert id="save_proSch" parameterType="com.casd.entity.construct.ProSch">
+		insert into construct_prosch_table
+		(construct_prosch_id,construct_prosch_system,construct_prosch_teamplan,construct_prosch_makespan,
+		construct_prosch_debugcom,construct_prosch_detectioncom,construct_prosch_accepcom,construct_prosch_busyowner,
+		construct_prosch_fulfil,construct_prosch_checkupon,construct_prosch_turnover,construct_prosch_startbusiness,
+		construct_prosch_settlement,construct_prosch_updatetime,construct_prosch_remark,construct_prosch_projectid
+		)
+		VALUES
+		(
+		#{construct_prosch_id},#{construct_prosch_system},#{construct_prosch_teamplan},#{construct_prosch_makespan},
+		#{construct_prosch_debugcom},#{construct_prosch_detectioncom},#{construct_prosch_accepcom},#{construct_prosch_busyowner},
+		#{construct_prosch_fulfil}, #{construct_prosch_checkupon},
+		#{construct_prosch_turnover}, #{construct_prosch_startbusiness},
+		#{construct_prosch_settlement}, #{construct_prosch_updatetime},
+		#{construct_prosch_remark}, #{construct_prosch_projectid}
+		)
+		on duplicate key update
+		construct_prosch_id=#{construct_prosch_id},construct_prosch_system=#{construct_prosch_system},
+		construct_prosch_teamplan=#{construct_prosch_teamplan},construct_prosch_makespan=#{construct_prosch_makespan},
+		construct_prosch_debugcom=#{construct_prosch_debugcom},construct_prosch_detectioncom=#{construct_prosch_detectioncom},
+		construct_prosch_accepcom=#{construct_prosch_accepcom},construct_prosch_busyowner=#{construct_prosch_busyowner},
+		construct_prosch_fulfil=#{construct_prosch_fulfil},construct_prosch_checkupon=#{construct_prosch_checkupon},
+		construct_prosch_turnover=#{construct_prosch_turnover},construct_prosch_startbusiness=#{construct_prosch_startbusiness},
+		construct_prosch_settlement=#{construct_prosch_settlement},construct_prosch_updatetime=#{construct_prosch_updatetime},
+		construct_prosch_remark=#{construct_prosch_remark},construct_prosch_projectid=#{construct_prosch_projectid}
+	</insert>
+
+
+	<delete id="delete_ProSch" parameterType="map">
+		DELETE FROM construct_prosch_table where construct_prosch_id=
+		${construct_prosch_id}
+	</delete>
+
+</mapper>
+
+

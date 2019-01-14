@@ -1,0 +1,237 @@
+package com.casd.controller.ownCenter;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONObject;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.ownCenter.FieldPersonnel;
+import com.casd.entity.uc.User;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.ownCenter.FieldPersonnelSevrice;
+import com.casd.service.uc.UserService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class FieldPersonneController {
+	
+	@Autowired
+	private FieldPersonnelSevrice fPersonnelSevrice;
+	
+	@Autowired
+	private UserService userService;
+	
+	@Autowired
+	private ActivitiService activitiService;
+	
+	/** @author Administrator
+	 *  所以外勤申请数据列表
+	 * */
+	@RequestMapping(value = "findFieldpList", method = RequestMethod.GET)
+	public String findFieldpList() {		
+		return "ownCenter/findFieldpList";
+     	}
+
+	@RequestMapping(value = "/findFieldpList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> templatelList(HttpServletRequest request)
+			throws Exception {
+
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+	
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		String fields = " ofp.*,us.username";
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" own_field_personnel ofp");
+		sbf.append(" LEFT JOIN uc_user us ON ofp.field_personnel_userid = us.userid");
+		sbf.append(" where 1=1");
+	    sbf.append(" ORDER BY ofp.field_personnel_id DESC");
+		List<Map<String, Object>> ListData = fPersonnelSevrice.findFieldpList(pageIndex, pageSize, record, fields, sbf.toString());
+		json.put("rows", ListData);
+		json.put("total", record.getValue());
+		return json;
+	}
+	
+	
+	/**  
+	 *  跳转新增页面
+	 * @throws Exception 
+	 * */
+	 @RequestMapping(value = "newFieldPersonnel", method = RequestMethod.GET)
+	   public ModelAndView newFieldPersonnel(HttpServletRequest request) throws Exception {
+		ModelAndView mv=new ModelAndView();
+		
+		String biz=request.getParameter("biz");
+		String fields = "";
+		StringBuffer sbf=new StringBuffer();
+		 Map<String, Object> dataMap= null;
+		
+		 //添加时查询
+		if (biz.equals("add")) {
+
+			User loginUser = (User) request.getSession().getAttribute("loginUser");
+			int userid=loginUser.getUserid();
+			fields+="us.userid,us.username,role.role_name,company.company_name";
+			sbf.append(" uc_user us LEFT JOIN  uc_center center on us.center_id=center.center_id");
+			sbf.append(" LEFT JOIN uc_role role on role.role_id=us.role_id");
+			sbf.append(" LEFT JOIN uc_company company  on company.company_id=center.center_companyId");
+			sbf.append(" WHERE us.userid="+userid);
+		   dataMap= userService.queryUserById(fields, sbf.toString());
+		 //编辑时查询
+		}else{
+			fields +="ofp.*,us.username,us.userid,ur.role_name,company.company_name";
+			sbf.append("own_field_personnel ofp");
+			sbf.append(" LEFT JOIN uc_user us on ofp.field_personnel_userid=us.userid");
+			sbf.append(" LEFT JOIN uc_role ur on us.role_id=ur.role_id");
+			sbf.append(" LEFT JOIN uc_center center ON center.center_id= us.center_id");
+			sbf.append(" LEFT JOIN uc_company company on  center.center_companyId=company.company_id");
+			sbf.append(" where ofp.field_personnel_id="+biz);
+			dataMap= userService.queryUserById(fields, sbf.toString());
+
+		  }
+		   String beyId = "findFieldpView"; // 流程实例key 请勿改动
+
+		  List<Map<String, Object>> historyList  = activitiService.viewHisComments(biz, beyId);
+		
+		//审核历史意见
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("history", historyList);
+	    mv.addObject("history", jsonObject);
+    
+        mv.addAllObjects(dataMap);
+		mv.setViewName("ownCenter/newFieldPersonnel");
+		return mv;
+	}
+	
+	 
+	    /**
+	     * 外勤申请数据提交
+	     * 
+	     * */
+	  @RequestMapping(value = "/addFieldPersonne", method = RequestMethod.POST)
+	  @ResponseBody
+	   public Map<String, Object> addFieldPersonne(FieldPersonnel fpl) {
+		
+		  Map<String, Object> json=new HashMap<String, Object>(); 
+		 try {
+				fPersonnelSevrice.addFieldPersonne(fpl);
+				json.put("Success", true);
+				json.put("Msg", "提交成功");
+			} catch (Exception e) {
+				e.printStackTrace();
+				json.put("Success", false);
+				json.put("Msg", "保存失败");
+	        }
+		        return json;
+	     }
+	  
+	     /**
+	     * 删除外勤数据
+	     * 
+	     * */
+	  @RequestMapping(value = "/deleteFieldPersonne", method = RequestMethod.POST)
+	  @ResponseBody
+	   public Map<String, Object> deleteFieldPersonne(String biz) {
+		  Map<String, Object> json=new HashMap<String, Object>();
+		  try {
+			  String where=" where field_personnel_id="+biz;
+			 fPersonnelSevrice.deleteFieldPsl(where);
+				json.put("Success", true);
+				json.put("Msg", "已删除");
+			} catch (Exception e) {
+				e.printStackTrace();
+				json.put("Success", false);
+				json.put("Msg", "删除失败");
+	        }
+	     	return json;
+
+	  }
+	  
+	  @RequestMapping(value = "findFieldpAudit", method = RequestMethod.GET)
+	  public ModelAndView findFieldpAudit(String taskid,String taskName) throws Exception {
+			ModelAndView mv=new ModelAndView();
+			String bizkey = activitiService.getBusinessBizId(taskid);// 获取业务编号
+           
+			String[] strs = bizkey.split("\\.");
+			String bizId = null; // 业务编号
+			for (int i = 0, len = strs.length; i < len; i++) {
+				bizId = strs[i].toString();
+			}
+			String fields = "";
+			StringBuffer sbf=new StringBuffer();	
+			fields +="ofp.*,us.username,us.userid,ur.role_name,company.company_name";
+			sbf.append("own_field_personnel ofp");
+			sbf.append(" LEFT JOIN uc_user us on ofp.field_personnel_userid=us.userid");
+			sbf.append(" LEFT JOIN uc_role ur on us.role_id=ur.role_id");
+			sbf.append(" LEFT JOIN uc_center center ON center.center_id= us.center_id");
+			sbf.append(" LEFT JOIN uc_company company on  center.center_companyId=company.company_id");
+			sbf.append(" where ofp.field_personnel_id="+bizId);
+		    Map<String, Object>	dataMap= userService.queryUserById(fields, sbf.toString());
+		    //查询审核人
+		     sbf.delete(0, sbf.length());
+			 String finde="ucs.username,ucs.userid";
+		
+			 sbf.append(" uc_user ucs JOIN uc_role role on ucs.role_id=role.role_id");
+		    if (taskName.equals("申请人")){
+			 sbf.append(" where role.role_name LIKE '%助理' OR  role.role_name LIKE '%总经理'") ;  
+			
+		     }else if(taskName.equals("主管公司总经理")){
+		    	 sbf.append(" WHERE role.role_name LIKE '%管理%' OR  role.role_name ='合作中心文员'") ;  
+			 }else if(taskName.equals("管理公司总经理")){
+				 sbf.append(" WHERE role.role_name ='合作中心文员'") ;  
+			}else {
+				 sbf.append(" WHERE role.role_name = null") ;  
+			}
+		  List<Map<String, Object>> userList=userService.queryId(finde, sbf.toString());
+		  
+		  List<Map<String, Object>> historyList = activitiService.getProcessComments(taskid);// 查询审批记录
+			
+			//审核历史意见
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.put("history", historyList);
+		    mv.addObject("history", jsonObject);
+		   
+		    mv.addAllObjects(dataMap);
+		    mv.addObject("userList", userList);
+			mv.addObject("taskid", taskid);
+			mv.addObject("taskName", taskName);
+		   mv.setViewName("ownCenter/findFieldpAudit");
+		   return mv;
+		
+	}
+	  
+	  /**
+	   * 外出审核
+	   * */
+	  @RequestMapping(value = "/fieldPersonnelPass", method = RequestMethod.POST)
+	  @ResponseBody
+	  public Map<String, Object> fieldPersonnelPass(HttpServletRequest request) {
+		  Map<String, Object> json=new HashMap<String, Object>();
+	          try {
+		          fPersonnelSevrice.fieldPersonnelPass(request);
+				json.put("Success", true);
+				json.put("Msg", "已审核!");
+			} catch (Exception e) {
+				e.printStackTrace();
+				json.put("Success", false);
+				json.put("Msg", "程序出错,请联系技术员");
+			}
+		   return json;
+	     }
+	 
+}

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.supplierMod.WorkerDao">
+   
+   <insert id="saveWorkerAtt" parameterType="map" > 
+   		INSERT INTO hr_attend  (hr_attend_id,hr_attend_userId,hr_attend_date,hr_attend_WTLength,
+   		hr_attend_projectId,hr_attend_workTeamId) 
+        VALUES (${hr_attend_id},${hr_attend_userId},'${hr_attend_date}',${hr_attend_WTLength},
+        ${hr_attend_projectId},${hr_attend_workTeamId})
+   
+   
+   </insert>
+   
+   
+   <insert id="save_Worker" useGeneratedKeys="true" keyProperty="own_seal_id" parameterType="com.casd.entity.supplierMod.Worker">
+   		
+   		INSERT INTO suppliermod_worker_table  (supplierMod_worker_id,supplierMod_worker_projectId,supplierMod_worker_workTeamId,supplierMod_worker_userId,
+   		supplierMod_worker_remarks) 
+        VALUES (#{supplierMod_worker_id},#{supplierMod_worker_projectId},#{supplierMod_worker_workTeamId},#{supplierMod_worker_userId},
+        #{supplierMod_worker_remarks})
+   		on duplicate key update supplierMod_worker_id=#{supplierMod_worker_id},supplierMod_worker_projectId=#{supplierMod_worker_projectId},
+	    						supplierMod_worker_workTeamId=#{supplierMod_worker_workTeamId},supplierMod_worker_userId=#{supplierMod_worker_userId},
+	    						supplierMod_worker_remarks=#{supplierMod_worker_remarks}
+   </insert> 
+   
+	<select id="checkWorkerExist" parameterType="java.lang.String" resultType="java.lang.Boolean">
+    <![CDATA[ select count(supplierMod_worker_id) 
+        from suppliermod_worker_table where supplierMod_worker_userId = #{supplierMod_worker_userId}]]>
+  	</select>       
+   
+   <insert id="workerApply" useGeneratedKeys="true" keyProperty="suppliermod_worker_apply_id" parameterType="com.casd.entity.supplierMod.WorkerApply">
+   		INSERT INTO suppliermod_worker_apply  (suppliermod_worker_apply_id,suppliermod_worker_apply_userId,suppliermod_worker_apply_reason,suppliermod_worker_apply_proId,
+   		suppliermod_worker_apply_status,suppliermod_worker_apply_creatTime,suppliermod_worker_apply_oldProId,suppliermod_worker_apply_teamId) 
+        VALUES (0,#{suppliermod_worker_apply_userId},#{suppliermod_worker_apply_reason},#{suppliermod_worker_apply_proId},
+        #{suppliermod_worker_apply_status},#{suppliermod_worker_apply_creatTime},#{suppliermod_worker_apply_oldProId},#{suppliermod_worker_apply_teamId})						
+   </insert> 
+   
+   	<select id="findWorker" parameterType="map" resultType="map"> 
+    	  select ${fields} from ${where} 
+    </select>
+    
+    	<select id="getUserByName" parameterType="map" resultType="map"> 
+    	  select userid from uc_user where username='${construct_project_leader}'
+    </select>
+    
+    
+    <update id="updateWorker" parameterType="com.casd.entity.supplierMod.Worker">
+   
+          update suppliermod_worker_table 
+          <set>
+         	<if test="supplierMod_worker_projectId != 0">
+         		supplierMod_worker_projectId=#{supplierMod_worker_projectId},
+         	</if>
+         	<if test="supplierMod_worker_workTeamId!=0">
+         		supplierMod_worker_workTeamId=#{supplierMod_worker_workTeamId},
+         	</if>
+         	<if test="supplierMod_worker_userId!=0">
+         		supplierMod_worker_userId=#{supplierMod_worker_userId},
+         	</if>
+         	<if test="supplierMod_worker_remarks!=null">
+         		supplierMod_worker_remarks=#{supplierMod_worker_remarks}
+         	</if>
+         	<if test="supplierMod_worker_workTeamId!=null">
+         		supplierMod_worker_workTeamId=#{supplierMod_worker_workTeamId}
+         	</if>
+        </set>
+        where supplierMod_worker_id=#{supplierMod_worker_id}
+    </update>
+    
+    
+    <update id="multiplayerApply" parameterType="map">
+    
+    	update suppliermod_worker_table set supplierMod_worker_projectId=${suppliermod_worker_apply_proId},supplierMod_worker_workTeamId=${suppliermod_worker_apply_teamId}
+    	where  supplierMod_worker_id in (${what})
+    	
+    	
+    
+    </update>
+   
+   
+   <update id="updateworkerApply" parameterType="com.casd.entity.supplierMod.WorkerApply">
+   
+          update suppliermod_worker_apply 
+          <set>
+         	<if test="suppliermod_worker_apply_userId!=0">
+         		suppliermod_worker_apply_userId=#{suppliermod_worker_apply_userId},
+         	</if>
+         	<if test="suppliermod_worker_apply_reason!=null">
+         		suppliermod_worker_apply_reason=#{suppliermod_worker_apply_reason},
+         	</if>
+         	<if test="suppliermod_worker_apply_proId!=0">
+         		suppliermod_worker_apply_proId=#{suppliermod_worker_apply_proId},
+         	</if>
+         	<if test="suppliermod_worker_apply_status!=0">
+         		suppliermod_worker_apply_status=#{suppliermod_worker_apply_status},
+         	</if>
+         	<if test="suppliermod_worker_apply_creatTime != null">
+         		suppliermod_worker_apply_creatTime=#{suppliermod_worker_apply_creatTime},
+         	</if>
+         	<if test="suppliermod_worker_apply_oldProId!=0">
+         		suppliermod_worker_apply_oldProId=#{suppliermod_worker_apply_oldProId}
+         	</if>
+        </set>
+        where suppliermod_worker_apply_id=#{suppliermod_worker_apply_id}
+    </update>
+   
+   
+</mapper>

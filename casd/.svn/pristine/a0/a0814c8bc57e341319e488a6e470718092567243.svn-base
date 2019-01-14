@@ -1,0 +1,447 @@
+package com.casd.controller.construct;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.activiti.engine.task.Comment;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFPrintSetup;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.CellRangeAddress;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.controller.web.common.excel.ImportExcel;
+import com.casd.entity.construct.ApartyMaterial;
+import com.casd.entity.construct.ApartyPur;
+import com.casd.entity.construct.Construct;
+import com.casd.entity.construct.ConstructDep;
+import com.casd.entity.construct.PurchaseHead;
+import com.casd.entity.ownCenter.Seal;
+import com.casd.entity.uc.User;
+import com.casd.service.construct.APartyService;
+import com.casd.service.construct.ConstructService;
+import com.casd.service.construct.PurchaseService;
+import com.casd.service.hr.ActivitiService;
+import com.casd.service.uc.UserService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class APartyController {
+	
+	@Autowired
+	private ConstructService constructService;
+	@Autowired
+	private APartyService aPartyService;
+	
+	/**
+	 * 建设公司项目list
+	 */
+	@RequestMapping(value = "/aPartyConList", method = RequestMethod.GET)
+	public ModelAndView aPartyConList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("construct/aPartyConList");
+		return mv;
+	}
+
+	@RequestMapping(value = "/aPartyConList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> aPartyConList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" construct_project_table pro left join construct_project_dep dep on dep.constuct_project_dep_id=pro.construct_project_dep where dep.constuct_project_dep_company=1  ");
+		String construct_project_name = request.getParameter("construct_project_name");
+		if (StringUtils.hasText(construct_project_name)) {
+			sbf.append(" and pro.construct_project_name like '%" + construct_project_name
+					+ "%'");
+		}
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	    
+	
+	/**
+	 * 甲供材料list
+	 */
+	@RequestMapping(value = "/aPartyMaterialList", method = RequestMethod.GET)
+	public ModelAndView aPartyMaterialList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("construct_project_id", request.getParameter("construct_project_id"));
+		mv.setViewName("construct/aPartyMaterialList");
+		return mv;
+	}
+	@RequestMapping(value = "/aPartyMaterialList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> aPartyMaterialList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" construct_aparty_material  where construct_Aparty_material_constructId="+request.getParameter("construct_project_id")+"");
+		String construct_project_name = request.getParameter("construct_project_name");
+		if (StringUtils.hasText(construct_project_name)) {
+			sbf.append(" and pro.construct_project_name like '%" + construct_project_name
+					+ "%'");
+		}
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		
+		List<Map<String, Object>> data = aPartyService.getList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	
+	/**
+	 * 订单list
+	 */
+	@RequestMapping(value = "/aPartyPurList", method = RequestMethod.GET)
+	public ModelAndView aPartyPurList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("construct_project_id", request.getParameter("construct_project_id"));
+		mv.setViewName("construct/aPartyPurList");
+		return mv;
+	}
+	@RequestMapping(value = "/aPartyPurList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> aPartyPurList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" construct_aparty_purchase apa left join construct_project_table pro on apa.construct_Aparty_purchase_constructId=pro.construct_project_id where apa.construct_Aparty_purchase_constructId="+request.getParameter("construct_project_id")+"");
+		String construct_Aparty_purchase_orderNum = request.getParameter("construct_Aparty_purchase_orderNum");
+		if (StringUtils.hasText(construct_Aparty_purchase_orderNum)) {
+			sbf.append(" and apa.construct_Aparty_purchase_orderNum like '%" + construct_Aparty_purchase_orderNum
+					+ "%'");
+		}
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		
+		List<Map<String, Object>> data = aPartyService.getList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	/**
+	 * 添加订单明细
+	 */
+	@RequestMapping(value = "/aPartyPurNew", method = RequestMethod.GET)
+	public ModelAndView aPartyPurEntry(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		Map<String, List<Map<String, Object>>> map=new HashMap<String, List<Map<String,Object>>>();
+		int construct_Aparty_purchase_id=Integer.valueOf(request.getParameter("construct_Aparty_purchase_id").toString().equals("")?"0":request.getParameter("construct_Aparty_purchase_id").toString());
+		String type="";
+		if(construct_Aparty_purchase_id!=0){
+			map = aPartyService.constructNew(construct_Aparty_purchase_id);
+		}else{
+			List<Map<String, Object>> head=new ArrayList<Map<String,Object>>();
+			Map<String, Object> data=new HashMap<String, Object>();
+			Integer construct_project_id = Integer.valueOf(request.getParameter("construct_project_id"));
+			data = aPartyService.getConstruct(construct_project_id);
+			data.put("construct_Aparty_purchase_constructId", construct_project_id);
+			data.put("construct_Aparty_purchase_id",0);
+			head.add(data);
+			map.put("aParty", head);
+			type="new";
+		}
+		JSONObject json =new JSONObject();
+		json.put("entries", map.get("entries"));
+		json.put("type", type);
+		mv.addObject("aParty", map.get("aParty").get(0));
+		mv.addObject("entries", json);
+		mv.setViewName("construct/aPartyPurNew");
+		return mv;
+	}
+	
+	
+	/**
+	 * 查看订单明细
+	 */
+	@RequestMapping(value = "/aPartyPurView", method = RequestMethod.GET)
+	public ModelAndView aPartyPurView(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		Map<String, List<Map<String, Object>>> map=new HashMap<String, List<Map<String,Object>>>();
+		int construct_Aparty_purchase_id=Integer.valueOf(request.getParameter("construct_Aparty_purchase_id").toString().equals("")?"0":request.getParameter("construct_Aparty_purchase_id").toString());
+		if(construct_Aparty_purchase_id!=0){
+			map = aPartyService.constructNew(construct_Aparty_purchase_id);
+		}else{
+			List<Map<String, Object>> head=new ArrayList<Map<String,Object>>();
+			Map<String, Object> data=new HashMap<String, Object>();
+			Integer construct_project_id = Integer.valueOf(request.getParameter("construct_project_id"));
+			data = aPartyService.getConstruct(construct_project_id);
+			data.put("construct_Aparty_purchase_constructId", construct_project_id);
+			data.put("construct_Aparty_purchase_id",0);
+			head.add(data);
+			map.put("aParty", head);
+		}
+		JSONObject json =new JSONObject();
+		json.put("entries", map.get("entries"));
+		mv.addObject("aParty", map.get("aParty").get(0));
+		mv.addObject("entries", json);
+		mv.setViewName("construct/aPartyPurView");
+		return mv;
+	}
+	
+	
+	
+	/**
+	 * 保存工程量
+	 * 
+	 * */
+	@RequestMapping(value = "/save_aPartyMaterial", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> save_aPartyMaterial(HttpServletRequest request, ApartyMaterial apartyMaterial)
+			throws Exception {
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			
+			aPartyService.save_aPartyMaterial(apartyMaterial);
+			json.put("Success", true);
+			json.put("Msg", "保存成功");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "上传失败" + e);
+		}
+		return json;
+	}
+	
+	/**
+	 * 删除
+	*/
+	@RequestMapping(value = "/delete_aPartyMaterial", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> delete_aPartyMaterial(HttpServletRequest request) throws Exception {
+		Map<String, Object> json=new HashMap<String, Object>();
+		try {	
+		String cid = request.getParameter("cid");
+		cid = cid.substring(1);
+		String[] ids = cid.split("]");
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" where construct_Aparty_material_id in(" + ids[0] + ")");
+		System.out.println(sbf.toString());
+		aPartyService.delete_aPartyMaterial(sbf.toString());
+		} catch (Exception e) {
+			json.put("msg", "删除失败！");
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
+	/**
+	 * 方法说明：将Excel表格数据 导入
+	 * 
+	 * */
+	@RequestMapping(value = "/cp_aParty_exl", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object>  cp_aParty_exl(MultipartFile pic,
+			HttpServletRequest request) throws IOException {
+		Map<String, Object> json = new HashMap<String, Object>();
+
+		try {
+
+			// 获取原始文件名
+			String fileName = pic.getOriginalFilename();
+
+			String construct_project_id = request.getParameter("construct_project_id");
+
+			List<List<Object>> list = new ArrayList<List<Object>>();
+			ImportExcel ie = new ImportExcel();
+
+			if (StringUtils.isEmpty(fileName)) {
+				json.put("Success", false);
+				json.put("Msg", "请选择要导入的文件");
+				return json;
+			}
+
+			if (!fileName.substring(fileName.lastIndexOf(".")).equals(".xlsx")) {
+				json.put("Success", false);
+				json.put("Msg", "请选择Excel2007以上版本文件.xlsx");
+				return json;
+			}
+
+			File file2 = new File("e:/uploadfile");
+			if (!file2.exists()) {
+				file2.mkdirs();
+			}
+
+			// 定义文件路径
+			String fileUploadBasePath = "e:/uploadfile/";
+			File newFile = new File(fileUploadBasePath
+					+ System.currentTimeMillis() + fileName);
+
+			pic.transferTo(newFile); // 写入文件到服务器目录
+
+			list = ie.read2007Excel(newFile);
+
+			// 读取完信息删除上传文件
+			// 判断文件存在,删除
+			if (newFile.exists()) {
+				newFile.delete();
+			}
+			
+			aPartyService.cp_aParty_exl(list,construct_project_id);
+			
+			json.put("Success", true);
+			json.put("Msg", "导入成功");
+		} catch (Exception e) {
+			json.put("Success", false);
+			json.put("Msg", "导入失败" + e);
+		}
+		return json;
+	}
+	
+	
+	
+	/**
+	 * 甲供材料选择
+	 * 
+	 */
+	@RequestMapping(value = "/aPartyMaterialCheck", method = RequestMethod.GET)
+	public ModelAndView aPartyMaterialCheck(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("construct_project_id", request.getParameter("construct_project_id"));
+		mv.addObject("index", request.getParameter("index"));
+		mv.setViewName("checkBox/aPartyMaterialCheck");
+		return mv;
+	}
+	@RequestMapping(value = "/aPartyMaterialCheck", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> aPartyMaterialCheck(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		
+		String filds = "mat.construct_Aparty_material_id,mat.construct_Aparty_material_name,mat.construct_Aparty_material_unit,"
+				+ " mat.construct_Aparty_material_category,mat.construct_Aparty_material_num,mat.construct_Aparty_material_model,"
+				+ " mat.construct_Aparty_material_remark,mat.construct_Aparty_material_constructId, sum ";
+		
+		sbf.append(" (select mat.construct_Aparty_material_id,mat.construct_Aparty_material_name,mat.construct_Aparty_material_unit, ");
+		sbf.append(" mat.construct_Aparty_material_category,mat.construct_Aparty_material_num,mat.construct_Aparty_material_model, ");
+		sbf.append(" mat.construct_Aparty_material_remark,mat.construct_Aparty_material_constructId,SUM(purentry.construct_Aparty_purEntry_num) sum ");
+		sbf.append(" from construct_aparty_material mat ");
+		sbf.append(" left join  construct_aparty_purentry purentry on mat.construct_Aparty_material_id=construct_Aparty_purEntry_materialId ");
+		sbf.append(" where mat.construct_Aparty_material_constructId="+request.getParameter("construct_project_id")+"");
+		sbf.append(" GROUP BY mat.construct_Aparty_material_id");
+		sbf.append(" ) tableAll ");
+		/*String construct_project_name = request.getParameter("construct_project_name");
+		if (StringUtils.hasText(construct_project_name)) {
+			sbf.append(" and pro.construct_project_name like '%" + construct_project_name
+					+ "%'");
+		}*/
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		
+		List<Map<String, Object>> data = aPartyService.getList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	
+	/**
+	 * 保存采购单
+	 * 
+	 * */
+	@RequestMapping(value = "/save_aPartyPur", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> save_aPartyPur(HttpServletRequest request, ApartyPur apartyPur)
+			throws Exception {
+		Map<String, Object> json = new HashMap<String, Object>();
+		try {
+			String rows = request.getParameter("rows");
+			aPartyService.save_aPartyPur(apartyPur,rows);
+			json.put("Success", true);
+			json.put("Msg", "保存成功");
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("Success", false);
+			json.put("Msg", "上传失败" + e);
+		}
+		return json;
+	}
+	
+	/**
+	 * 删除采购单
+	*/
+	@RequestMapping(value = "/dele_apartyPur", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> dele_apartyPur(HttpServletRequest request) throws Exception {
+		Map<String, Object> json=new HashMap<String, Object>();
+		try {	
+		String id = request.getParameter("id");
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" where construct_Aparty_purchase_id in(" + id + ")");
+		aPartyService.dele_apartyPur(sbf.toString());
+		} catch (Exception e) {
+			json.put("msg", "删除失败！");
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
+}

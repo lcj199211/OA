@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.finance.SettleDao">
+	<!-- 解决表名与字段不匹配 -->
+	<!-- type 类的全限定名, 或者一个类型别名 id 当前命名空间中的一个唯一标识，用于标识一个result map result 注入到字段或 
+		JavaBean 属性的普通结果 -->
+
+
+	<!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句 resultMap 外部 resultMap 的命名引用 resultType 
+		从这条语句中返回的期望类型的类的完全限定名或别名。 -->
+	<!-- 初始化页面流程 -->	
+    
+    <!--查询审核列表  -->
+    
+    <select id="supplierList" parameterType="map" resultType="map">
+		select ${fields}
+		from ${where} ${limit}
+	</select>
+	
+	 <select id="purSelect" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+	
+	
+	<select id="getProject" parameterType="map" resultType="map">
+        select ${filds} from ${where} 
+    </select>
+	
+	<select id="initSettle" parameterType="map" resultType="map">
+        select ${filds} from ${where} 
+    </select>
+	
+	<!-- 保存 -->
+    <insert id="saveSettle" useGeneratedKeys="true" keyProperty="finance_settlepay_id" parameterType="com.casd.entity.finance.Settle" >
+        INSERT INTO finance_settlepay_table  
+        (
+        finance_settlepay_id,finance_settlepay_owe,finance_settlepay_payed,finance_settlepay_supplier,
+        finance_settlepay_projectid,finance_settlepay_paytime
+        ) 
+        VALUES
+        (
+        #{finance_settlepay_id},#{finance_settlepay_owe},#{finance_settlepay_payed},#{finance_settlepay_supplier},
+        #{finance_settlepay_projectid},#{finance_settlepay_paytime}
+        )
+        on duplicate key update
+	            finance_settlepay_id=#{finance_settlepay_id},finance_settlepay_owe=#{finance_settlepay_owe},finance_settlepay_payed=#{finance_settlepay_payed},
+	            finance_settlepay_supplier=#{finance_settlepay_supplier},finance_settlepay_projectid=#{finance_settlepay_projectid},finance_settlepay_paytime=#{finance_settlepay_paytime}
+    </insert>
+    
+    <insert id="saveSettlePay" parameterType="com.casd.entity.finance.SettlePay" >
+        INSERT INTO finance_settlepay_payNum  
+        (
+        finance_settlepay_payNum_id,finance_settlepay_purNum_parentid,finance_settlepay_purNum_date,finance_settlepay_purNum_payable,
+        finance_settlepay_purNum_nowpay,finance_settlepay_purNum_payed,finance_settlepay_purNum_owe,finance_settlepay_purNum_status
+        ) 
+        VALUES
+        (
+        #{finance_settlepay_payNum_id},#{finance_settlepay_purNum_parentid},#{finance_settlepay_purNum_date},#{finance_settlepay_purNum_payable},
+        #{finance_settlepay_purNum_nowpay},#{finance_settlepay_purNum_payed},#{finance_settlepay_purNum_owe},#{finance_settlepay_purNum_status}
+        )
+        on duplicate key update
+	            finance_settlepay_payNum_id=#{finance_settlepay_payNum_id},finance_settlepay_purNum_parentid=#{finance_settlepay_purNum_parentid},
+	            finance_settlepay_purNum_date=#{finance_settlepay_purNum_date},finance_settlepay_purNum_payable=#{finance_settlepay_purNum_payable},
+	            finance_settlepay_purNum_nowpay=#{finance_settlepay_purNum_nowpay},finance_settlepay_purNum_payed=#{finance_settlepay_purNum_payed},
+	            finance_settlepay_purNum_owe=#{finance_settlepay_purNum_owe},finance_settlepay_purNum_status=#{finance_settlepay_purNum_status}
+    </insert>
+	
+	<insert id="saveSettlePur" parameterType="com.casd.entity.finance.SettlePur" >
+        INSERT INTO finance_settlepay_pur  
+        (
+        finance_settlepay_pur_id,finance_settlepay_pur_parentid,finance_settlepay_pur_purchaseid,finance_settlepay_pur_supplier,
+        finance_settlepay_pur_projectid,finance_settlepay_pur_shouldpay,finance_settlepay_pur_arrivedid
+        ) 
+        VALUES
+        (
+        #{finance_settlepay_pur_id},#{finance_settlepay_pur_parentid},#{finance_settlepay_pur_purchaseid},#{finance_settlepay_pur_supplier},
+        #{finance_settlepay_pur_projectid},#{finance_settlepay_pur_shouldpay},#{finance_settlepay_pur_arrivedid}
+        )
+        on duplicate key update
+	            finance_settlepay_pur_id=#{finance_settlepay_pur_id},finance_settlepay_pur_parentid=#{finance_settlepay_pur_parentid},
+	            finance_settlepay_pur_purchaseid=#{finance_settlepay_pur_purchaseid},finance_settlepay_pur_supplier=#{finance_settlepay_pur_supplier},
+	            finance_settlepay_pur_projectid=#{finance_settlepay_pur_projectid},finance_settlepay_pur_shouldpay=#{finance_settlepay_pur_shouldpay},
+	            finance_settlepay_pur_arrivedid=#{finance_settlepay_pur_arrivedid}
+    </insert>
+	
+	<select id="getPayedTotal" parameterType="map" resultType="string">
+		select ${fields}
+		from ${where} 
+	</select>
+	
+	<insert id="add_payNumList" useGeneratedKeys="true" keyProperty="finance_settlepay_payNum_id"  parameterType="com.casd.entity.finance.SettlePay">
+          insert into  finance_settlepay_payNum (finance_settlepay_payNum_id,finance_settlepay_purNum_parentid,finance_settlepay_purNum_date,
+          finance_settlepay_purNum_payable,finance_settlepay_purNum_nowpay,finance_settlepay_purNum_payed,finance_settlepay_purNum_owe,finance_settlepay_purNum_status
+          ,finance_settlepay_purNum_paytype,finance_settlepay_purNum_paypercent
+          ) 
+            VALUES  
+	        (#{finance_settlepay_payNum_id},#{finance_settlepay_purNum_parentid},#{finance_settlepay_purNum_date}
+	        ,#{finance_settlepay_purNum_payable},#{finance_settlepay_purNum_nowpay},#{finance_settlepay_purNum_payed}
+	        ,#{finance_settlepay_purNum_owe},#{finance_settlepay_purNum_status},#{finance_settlepay_purNum_paytype},#{finance_settlepay_purNum_paypercent}
+	        ) 
+	         
+	        on duplicate key update finance_settlepay_payNum_id=#{finance_settlepay_payNum_id},finance_settlepay_purNum_parentid=#{finance_settlepay_purNum_parentid},
+	    						finance_settlepay_purNum_date=#{finance_settlepay_purNum_date},finance_settlepay_purNum_payable=#{finance_settlepay_purNum_payable},
+	    						finance_settlepay_purNum_nowpay=#{finance_settlepay_purNum_nowpay},finance_settlepay_purNum_payed=#{finance_settlepay_purNum_payed},
+	    						finance_settlepay_purNum_owe=#{finance_settlepay_purNum_owe},finance_settlepay_purNum_status=#{finance_settlepay_purNum_status},
+	    						finance_settlepay_purNum_paytype=#{finance_settlepay_purNum_paytype},finance_settlepay_purNum_paypercent=#{finance_settlepay_purNum_paypercent}
+         </insert>
+	
+	<delete id="delePur" parameterType="map">
+	       DELETE FROM finance_settlepay_pur ${where}
+	       </delete>
+	
+	<delete id="delePayList" parameterType="map">
+	       DELETE FROM ${table}  ${where}
+	       </delete>
+	 
+	<!--  <delete id="update_settlePayNum" parameterType="map">
+	      update finance_settlepay_paynum set finance_settlepay_purNum_status=${status}  where finance_settlepay_payNum_id=${billID}
+	 </delete>     -->  
+	       
+	 <update id="update_settlePayNum"  parameterType="map">
+ 		  	update finance_settlepay_paynum
+ 		<trim prefix="set" suffixOverrides=",">
+  			<if test="status!=null">finance_settlepay_purNum_status=${status},</if>
+  			<if test="noPay!=null">finance_settlepay_purNum_owe=${noPay},</if>
+ 		</trim>
+ 			where finance_settlepay_payNum_id=${billID}
+	 </update>
+		<update id="update" parameterType="map">
+		
+		update finance_settlepay_paynum set ${filds} where finance_settlepay_payNum_id=${bizId};
+
+	</update>
+	  
+	       
+</mapper>

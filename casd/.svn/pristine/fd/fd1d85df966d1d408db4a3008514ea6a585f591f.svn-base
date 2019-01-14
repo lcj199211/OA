@@ -1,0 +1,47 @@
+package com.casd.serviceimpl.hr;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.dao.hr.ResignDao;
+import com.casd.entity.hr.Resign;
+import com.casd.service.hr.ResignService;
+
+@Service
+public class ResignServiceImpl implements ResignService {
+	@Autowired
+	private ResignDao resignDao;
+
+	@Override
+	@Transactional
+	public void addResign(Resign ressign) {
+		// TODO Auto-generated method stub
+		resignDao.addResign(ressign);
+	}
+
+	@Override
+	public List<Resign> getData(String fields, String where) {
+		// TODO Auto-generated method stub
+		Map<String , Object>param=new HashMap<String, Object>();
+		param.put("fields",fields );
+		param.put("where", where);
+		return resignDao.getData(param);
+		
+	}
+
+	@Override
+	public void addAutoPath(String path,String resignId) {
+		
+		Map<String , Object>param=new HashMap<String, Object>();
+		param.put("where", "hr_resign_autoPath = '"+path+"'  WHERE hr_resign_id = "+resignId+"");
+		resignDao.addAutoPath(param);
+		
+	}
+
+	
+}

@@ -1,0 +1,55 @@
+package com.casd.serviceimpl.supplierMod;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.activiti.engine.delegate.DelegateExecution;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.ownCenter.LeaveDao;
+import com.casd.dao.supplierMod.WorkerDao;
+import com.casd.entity.ownCenter.Leave;
+import com.casd.entity.supplierMod.Worker;
+import com.casd.entity.supplierMod.WorkerApply;
+import com.casd.service.supplierMod.WorkerService;
+
+@Service
+public class WorkerServiceImpl implements WorkerService {
+	
+	@Autowired
+	private WorkerDao workerDao;
+	
+	@Override
+	@Transactional
+	public Boolean checkWorkerExist(String supplierMod_worker_userId) {
+		// TODO Auto-generated method stub
+		
+		return workerDao.checkWorkerExist(supplierMod_worker_userId);
+		
+	}
+
+	@Override
+	@Transactional
+	public void save_Worker(Worker worker) {
+		// TODO Auto-generated method stub
+		workerDao.save_Worker(worker);
+		
+	}
+
+	@Override
+	@Transactional
+	public void workerApply(WorkerApply workerApply) {
+		// TODO Auto-generated method stub
+		workerDao.workerApply(workerApply);
+		
+	}
+
+
+		
+	 
+}

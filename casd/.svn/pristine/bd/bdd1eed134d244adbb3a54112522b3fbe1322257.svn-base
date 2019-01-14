@@ -1,0 +1,29 @@
+package com.casd.controller.ownCenter;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+
+@Controller
+@RequestMapping("/admin")
+public class workArrangedController {
+	
+	/**
+	 * 任务安排list
+	*/
+	@RequestMapping(value="/ownWorkList", method = RequestMethod.GET)
+	public ModelAndView ownWorkList(HttpServletRequest request) {
+		
+		ModelAndView mv=new ModelAndView();
+		mv.setViewName("ownCenter/ownWorkList");
+		return mv;
+	}
+	
+	
+	
+	
+}

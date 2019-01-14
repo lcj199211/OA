@@ -1,0 +1,37 @@
+package com.casd.service.sciAndTec;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONArray;
+
+import org.activiti.engine.delegate.DelegateExecution;
+
+import com.casd.entity.sciAndTec.CheckPro;
+import com.casd.entity.sciAndTec.CheckRecordEntry;
+import com.casd.entity.sciAndTec.CheckRecordHead;
+import com.casd.entity.supplierMod.Worker;
+import com.casd.entity.supplierMod.WorkerApply;
+
+public interface MaintService {
+
+	void saveCheckCon(CheckPro checkPro, JSONArray myJsonArray);
+
+	Map<String, Object> getCheckContentById(Map<String, Object> map);
+
+	void delete_checkCon(Map<String, Object> map);
+
+	void dele_checkPro(Map<String, Object> map);
+
+	void add_record(CheckRecordHead checkRecordHead);
+
+	void dele_checkRecord(String id);
+
+	void update_record(CheckRecordEntry checkRecordEntry);
+
+
+
+		
+	 
+}

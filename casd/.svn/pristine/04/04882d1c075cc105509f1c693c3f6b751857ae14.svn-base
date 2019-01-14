@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.FinalPurchaseDao">
+    <!-- 解决表名与字段不匹配 -->
+    <!-- type 类的全限定名, 或者一个类型别名
+         id 当前命名空间中的一个唯一标识，用于标识一个result map
+         result 注入到字段或 JavaBean 属性的普通结果
+     -->
+
+    
+    <!-- id 在命名空间中唯一的标识符，可以被用来引用这条语句
+         resultMap 外部 resultMap 的命名引用
+         resultType 从这条语句中返回的期望类型的类的完全限定名或别名。
+     -->
+    <!-- 采购列表 -->
+    <select id="finalPurchaseList" parameterType="map" resultType="map">
+        select * from ${where} ${limit}
+    </select>
+     <select id="getFinalPurchaseCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+    
+    <select id="getHead" parameterType="map"  resultType="com.casd.entity.construct.PurchaseHeadClass">
+        select * FROM construct_purchase_head_class WHERE construct_purchase_id = ${id}  
+    </select>
+    <select id="getEntry" parameterType="map"  resultType="map">
+        select * FROM construct_purchase_entry_class WHERE construct_purchase_parentId = ${id}  
+    </select>
+    
+    <select id="getPHead" parameterType="map"  resultType="map">
+        select ${filds} FROM  ${where}  
+    </select>
+    
+    <select id="getPEntry" parameterType="map"  resultType="map">
+        select * FROM  construct_purchase_entry_class  where construct_purchase_parentId= ${id}
+    </select>
+    <update id="updatePurchaseStatus" parameterType="com.casd.entity.construct.PurchaseHeadClass">
+    	update construct_purchase_head_class set construct_purchase_status=#{construct_purchase_status} 
+    	where construct_purchase_id=#{construct_purchase_id}
+    </update>
+    
+    <update id="savePurchaseNum" parameterType="java.util.List">
+    	 <foreach collection="list" item="item" index="index"  separator =";">  
+                update construct_purchase_entry_class   
+                <set>  
+                  construct_purchase_arriveNum=#{item.construct_purchase_arriveNum} 
+                </set>  
+                where construct_purchase_entryId = #{item.construct_purchase_entryId}   
+         </foreach>  
+    </update>
+    
+    
+    
+    <!-- 保存 -->
+    <insert id="saveArriveHead" useGeneratedKeys="true" keyProperty="construct_purchase_arrived_id" parameterType="com.casd.entity.construct.PurchaseArrivedHead" >
+        INSERT INTO construct_purchase_arrived  
+        (
+        construct_purchase_arrived_id,construct_purchase_arrived_parentId,construct_purchase_arrived_data,construct_purchase_arrived_money
+        ) 
+        VALUES
+        (
+        #{construct_purchase_arrived_id},#{construct_purchase_arrived_parentId},#{construct_purchase_arrived_data},#{construct_purchase_arrived_money}
+        )
+        on duplicate key update
+	            construct_purchase_arrived_id=#{construct_purchase_arrived_id},construct_purchase_arrived_parentId=#{construct_purchase_arrived_parentId},construct_purchase_arrived_data=#{construct_purchase_arrived_data},
+	            construct_purchase_arrived_money=#{construct_purchase_arrived_money}
+    </insert>
+    
+    <insert id="saveArriveEntry" parameterType="com.casd.entity.construct.PurchaseArriveEntry" >
+        INSERT INTO construct_purchase_arrived_entry  
+        (
+        construct_purchase_arrived_entry_id,construct_purchase_arrived_entry_parentId,construct_purchase_arrived_entry_num,construct_purchase_arrived_entry_money,
+        construct_purchase_arrived_entry_chassId
+        ) 
+        VALUES
+        (
+        #{construct_purchase_arrived_entry_id},#{construct_purchase_arrived_entry_parentId},#{construct_purchase_arrived_entry_num},#{construct_purchase_arrived_entry_money},
+        #{construct_purchase_arrived_entry_chassId}
+        )
+        on duplicate key update
+	            construct_purchase_arrived_entry_id=#{construct_purchase_arrived_entry_id},construct_purchase_arrived_entry_parentId=#{construct_purchase_arrived_entry_parentId},
+	            construct_purchase_arrived_entry_num=#{construct_purchase_arrived_entry_num},construct_purchase_arrived_entry_money=#{construct_purchase_arrived_entry_money},
+	            construct_purchase_arrived_entry_chassId=#{construct_purchase_arrived_entry_chassId}
+    </insert>
+    
+    
+    <select id="getArriveHead" parameterType="map"  resultType="com.casd.entity.construct.PurchaseArrivedHead">
+        SELECT * FROM construct_purchase_arrived  WHERE construct_purchase_arrived_id = ${id}  
+    </select>
+    <select id="getArriveEntry" parameterType="map"  resultType="map">
+        SELECT * FROM construct_purchase_arrived_entry arrive 
+		LEFT JOIN construct_purchase_entry_class class on arrive.construct_purchase_arrived_entry_chassId=class.construct_purchase_entryId  WHERE arrive.construct_purchase_arrived_entry_parentId = ${id}    
+    </select>
+    
+    
+    <update id="updatePurEntryClass" parameterType="java.util.List">
+    	 <foreach collection="list" item="item" index="index"  separator =";">  
+                update construct_purchase_entry_class   
+                <set>  
+                  construct_purchase_arriveNum=#{item.construct_purchase_arriveNum} ,
+                  construct_purchase_noArrive=#{item.construct_purchase_noArrive} 
+                </set>  
+                where construct_purchase_entryId = #{item.construct_purchase_entryId}   
+         </foreach>  
+    </update>
+    
+    
+</mapper>

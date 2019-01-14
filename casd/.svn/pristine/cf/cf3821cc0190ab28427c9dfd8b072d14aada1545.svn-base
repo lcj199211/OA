@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.sciAndTec.MaintDao">
+   
+   
+   <insert id="saveCheckPro" useGeneratedKeys="true" keyProperty="maintain_checkPro_id" parameterType="com.casd.entity.sciAndTec.CheckPro">
+   		
+   		INSERT INTO maintain_checkPro  ( maintain_checkPro_id,maintain_checkPro_name ) 
+        VALUES ( #{maintain_checkPro_id},#{maintain_checkPro_name} )
+   		on duplicate key update maintain_checkPro_id=#{maintain_checkPro_id},maintain_checkPro_name=#{maintain_checkPro_name}
+   		
+   </insert> 
+   
+   <insert id="saveCheckCon" useGeneratedKeys="true" keyProperty="maintain_checkContent_id" parameterType="com.casd.entity.sciAndTec.CheckContent">
+   		
+   		INSERT INTO maintain_checkContent  ( maintain_checkContent_id,maintain_checkContent_name,maintain_checkContent_parentId ) 
+        VALUES ( #{maintain_checkContent_id},#{maintain_checkContent_name},#{maintain_checkContent_parentId} )
+   		on duplicate key update maintain_checkContent_id=#{maintain_checkContent_id},maintain_checkContent_name=#{maintain_checkContent_name}
+   		,maintain_checkContent_parentId=#{maintain_checkContent_parentId}
+   </insert> 
+   
+   
+   <select id="getCheckPro" parameterType="map" resultType="com.casd.entity.sciAndTec.CheckPro"> 
+    	  select ${fields} from ${where} 
+    </select>
+    <select id="getCheckContentById" parameterType="map" resultType="map"> 
+    	  select * from maintain_checkContent WHERE maintain_checkContent_parentId=#{maintain_checkContent_parentId}
+    </select>
+   
+   
+   <delete id="delete_checkCon" parameterType="map">
+       DELETE FROM    ${where}
+    </delete>
+   
+   <insert id="add_record" useGeneratedKeys="true" keyProperty="maintain_checkRecord_head_id" parameterType="com.casd.entity.sciAndTec.CheckRecordHead">
+   		
+   		INSERT INTO maintain_checkrecord_head  ( maintain_checkRecord_head_id,maintain_checkRecord_head_date,maintain_checkRecord_head_proId,maintain_checkRecord_head_contractId ) 
+        VALUES ( #{maintain_checkRecord_head_id},#{maintain_checkRecord_head_date},#{maintain_checkRecord_head_proId},#{maintain_checkRecord_head_contractId} )
+   		on duplicate key update maintain_checkRecord_head_id=#{maintain_checkRecord_head_id},maintain_checkRecord_head_date=#{maintain_checkRecord_head_date}
+   		,maintain_checkRecord_head_proId=#{maintain_checkRecord_head_proId},maintain_checkRecord_head_contractId=#{maintain_checkRecord_head_contractId}
+   </insert> 
+   <insert id="add_recordEntry"  parameterType="map">
+   		
+   		INSERT INTO maintain_checkrecord_entry ${what}
+   </insert> 
+   
+   
+   <update id="update_record" parameterType="com.casd.entity.sciAndTec.CheckRecordEntry" >
+   
+   		update maintain_checkrecord_entry set  maintain_checkRecord_entry_status=#{maintain_checkRecord_entry_status},
+   		maintain_checkRecord_entry_describe=#{maintain_checkRecord_entry_describe},
+   		maintain_checkRecord_entry_handle=#{maintain_checkRecord_entry_handle},
+   		maintain_checkRecord_entry_reasonNoHandle=#{maintain_checkRecord_entry_reasonNoHandle}
+   		where maintain_checkRecord_entry_id=#{maintain_checkRecord_entry_id}
+   
+   </update>
+   
+   <delete id="dele_checkRecord" parameterType="map">
+		DELETE maintain_checkrecord_head, maintain_checkrecord_entry from ${what}
+	</delete>
+   
+</mapper>

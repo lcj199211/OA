@@ -1,0 +1,21 @@
+package com.casd.service.finance;
+
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONArray;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.finance.Material;
+import com.casd.entity.finance.MaterialModel;
+import com.casd.entity.finance.Supplier;
+
+public interface SupplierService {
+
+
+	void saveSupplier(Supplier supplier);
+
+	void deleSupplier(Map<String, Object> map);
+
+	  
+}

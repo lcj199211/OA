@@ -1,0 +1,71 @@
+package com.casd.controller.ownCenter;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.uc.User;
+import com.casd.service.ownCenter.OwnGoalService;
+import com.casd.service.ownCenter.OwnWorkService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class OwnGoalController {
+	
+	@Autowired
+	private OwnGoalService ownGoalService;
+	
+	/**
+	 * 个人目标list
+	*/
+	@RequestMapping(value="/ownGoalList", method = RequestMethod.GET)
+	public ModelAndView ownWorkList(HttpServletRequest request) {
+		
+		ModelAndView mv=new ModelAndView();
+		
+		mv.setViewName("ownCenter/ownGoalList");
+		return mv;
+	}
+	@RequestMapping(value = "/ownGoalList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> ownGoalList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		User loginUser = (User) request.getSession().getAttribute("loginUser");
+		String userId = String.valueOf(loginUser.getUserid());
+		
+		sbf.append(" own_goal where 1=1 and own_goal_userId="+userId+" ");
+		
+		String goal_year = request.getParameter("goal_year");
+		if (StringUtils.hasText(goal_year)) {
+			sbf.append(" and own_goal_year = '"+ goal_year + "' ");
+		}
+		sbf.append(" order BY 	own_goal_type ");
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+
+		List<Map<String, Object>> data = ownGoalService.ownGoalList(
+				pageIndex, pageSize, record, sbf.toString());
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	
+	
+}

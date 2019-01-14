@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.manage.ContractapproveDao">
+   
+   <select id="getList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit}
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+    <insert id="saveContractapprove" useGeneratedKeys="true" keyProperty="manage_contractapprove_id" parameterType="com.casd.entity.manage.Contractapprove">
+   		
+   		INSERT INTO manage_contractapprove (manage_contractapprove_id,manage_contractapprove_name,manage_contractapprove_company,manage_contractapprove_firstParty,
+   		manage_contractapprove_amount,manage_contractapprove_address,manage_contractapprove_startTime,manage_contractapprove_endTime,manage_contractapprove_attachAddress,
+   		manage_contractapprove_remark,manage_contractapprove_num,manage_status,manage_contractapprove_payment,manage_contractapprove_taxIncluded,manage_contractapprove_secondParty) 
+        VALUES (#{manage_contractapprove_id},#{manage_contractapprove_name},#{manage_contractapprove_company},#{manage_contractapprove_firstParty},
+        #{manage_contractapprove_amount},#{manage_contractapprove_address},#{manage_contractapprove_startTime},#{manage_contractapprove_endTime},#{manage_contractapprove_attachAddress}, 
+        #{manage_contractapprove_remark},#{manage_contractapprove_num},#{manage_status},#{manage_contractapprove_payment},#{manage_contractapprove_taxIncluded},#{manage_contractapprove_secondParty})
+   		on duplicate key update manage_contractapprove_id=#{manage_contractapprove_id},manage_contractapprove_name=#{manage_contractapprove_name},
+	    						manage_contractapprove_company=#{manage_contractapprove_company},manage_contractapprove_firstParty=#{manage_contractapprove_firstParty},
+	    						manage_contractapprove_amount=#{manage_contractapprove_amount},manage_contractapprove_address=#{manage_contractapprove_address},
+	    						manage_contractapprove_startTime=#{manage_contractapprove_startTime},manage_contractapprove_endTime=#{manage_contractapprove_endTime},
+	    						manage_contractapprove_attachAddress=#{manage_contractapprove_attachAddress},
+	    						manage_contractapprove_remark=#{manage_contractapprove_remark},manage_contractapprove_num=#{manage_contractapprove_num},
+		 						manage_status=#{manage_status},manage_contractapprove_payment=#{manage_contractapprove_payment},
+		 						manage_contractapprove_taxIncluded=#{manage_contractapprove_taxIncluded},manage_contractapprove_secondParty=#{manage_contractapprove_secondParty}
+	    						
+   </insert>
+   
+  
+   
+    <select id="getContractapprove" parameterType="map" resultType="map">
+        select ${fields} from ${where} 
+    </select>
+    
+   
+   
+   <delete id="delete_Contractapprove" parameterType="map">
+		delete	 from ${what}
+	</delete>
+	
+  <update id="updateCtp" parameterType="com.casd.entity.manage.Contractapprove" >
+       update manage_contractapprove 
+        <set>
+        	<if test="manage_contractapprove_name!=null">
+         		`manage_contractapprove_name`=#{manage_contractapprove_name},
+         	</if>
+         	<if test="manage_contractapprove_company != 0">
+         		manage_contractapprove_company=#{manage_contractapprove_company},
+         	</if>
+         	<if test="manage_contractapprove_firstParty!=null">
+         		manage_contractapprove_firstParty=#{manage_contractapprove_firstParty}
+         	</if>
+         	<if test="manage_status!=null">
+         		manage_status=#{manage_status}
+         	</if>
+        </set>
+        where manage_contractapprove_id=#{manage_contractapprove_id}
+ </update>
+
+   
+</mapper>

@@ -1,0 +1,104 @@
+package com.casd.serviceimpl.construct;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.construct.APartyDao;
+import com.casd.entity.construct.ApartyMaterial;
+import com.casd.service.construct.APartyService;
+
+@Service
+public class ApartyServiceImpl implements APartyService {
+	
+	
+	@Autowired
+	private APartyDao apartyDao;
+
+	@Override
+	public List<Map<String, Object>> getList(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			int count = apartyDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return apartyDao.getList(param);
+	}
+
+	@Override
+	public Map<String, List<Map<String, Object>>> constructNew(
+			int construct_project_id) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", "*");
+		param.put("where", " construct_aparty_purchase where construct_Aparty_purchase_id="+construct_project_id+" ");
+		List<Map<String, Object>> headData =apartyDao.getData(param);
+		param.clear();
+		param.put("fields", "*");
+		param.put("where", " construct_aparty_purentry  where construct_Aparty_purchase_id="+construct_project_id+" ");
+		List<Map<String, Object>> entryData =apartyDao.getData(param);
+		Map<String, List<Map<String, Object>>> data=new HashMap<String, List<Map<String,Object>>>();
+		data.put("aParty", headData);
+		data.put("entries", entryData);
+		return data;
+	}
+
+	@Override
+	public void save_aPartyMaterial(ApartyMaterial apartyMaterial) {
+		// TODO Auto-generated method stub
+		
+		apartyDao.save_aPartyMaterial(apartyMaterial);
+		
+	}
+
+	@Override
+	public void delete_aPartyMaterial(String where) {
+		// TODO Auto-generated method stub
+		
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("where", where);
+		apartyDao.delete_aPartyMaterial(map);
+		
+	}
+
+	@Override
+	public void cp_aParty_exl(List<List<Object>> list,
+			String construct_project_id) {
+		
+		for (int i = 1; i < list.size(); i++) {
+			List<Object> eobj = list.get(i);
+			ApartyMaterial apartyMaterial=new ApartyMaterial();
+			apartyMaterial.setConstruct_Aparty_material_id(0);
+			apartyMaterial.setConstruct_Aparty_material_constructId(Integer.valueOf(construct_project_id));
+			apartyMaterial.setConstruct_Aparty_material_category(eobj.get(8).toString().trim());
+			//apartyMaterial.setConstruct_Aparty_material_model(eobj.get(6).toString().trim());
+			apartyMaterial.setConstruct_Aparty_material_name(eobj.get(1).toString().trim());
+			apartyMaterial.setConstruct_Aparty_material_num(0.00);
+			apartyMaterial.setConstruct_Aparty_material_remark(eobj.get(9).toString().trim());
+			apartyMaterial.setConstruct_Aparty_material_unit(eobj.get(2).toString().trim());
+			apartyDao.save_aPartyMaterial(apartyMaterial);
+		}
+		
+	}
+
+
+
+
+}

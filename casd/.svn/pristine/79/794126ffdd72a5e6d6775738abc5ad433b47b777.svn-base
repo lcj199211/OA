@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.activiti.ActivitiDao">
+	
+	<insert id="insertDataProcinst" parameterType="com.casd.entity.activiti.DataProcinst">
+		insert into act_data_procinst
+		(proc_inst_id_,applicant,illustrate)
+		VALUES
+		(#{proc_inst_id_},#{applicant},#{illustrate})
+	</insert>
+		
+</mapper>
+
+

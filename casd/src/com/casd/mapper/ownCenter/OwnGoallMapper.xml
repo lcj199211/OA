@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.ownCenter.OwnGoalDao">
+   
+   <select id="getOwnGoalList" parameterType="map" resultType="map">
+        select ${fields} from ${where} ${limit} 
+    </select>
+     <select id="getCount" parameterType="map" resultType="int">
+        select COUNT(1) from ${where} 
+    </select>
+   
+   <insert id="saveConstruct" useGeneratedKeys="true" keyProperty="own_goal_id" parameterType="com.casd.entity.ownCenter.OwnGoal">
+   
+   		
+   		INSERT INTO own_goal  (own_goal_id,own_goal_userId,own_goal_userName,own_goal_type,
+   		own_goal_year,own_goal_details,own_goal_creatTime,own_goal_finishTime,own_goal_isFinish)
+   		 
+        VALUES (#{own_goal_id},#{own_goal_userId},#{own_goal_userName},#{own_goal_type},
+        #{own_goal_year},#{own_goal_details},#{own_goal_creatTime},#{own_goal_finishTime},#{own_goal_isFinish})
+   		on duplicate key update own_goal_id=#{own_goal_id},own_goal_userId=#{own_goal_userId},
+	    						own_goal_userName=#{own_goal_userName},own_goal_type=#{own_goal_type},
+	    						own_goal_year=#{own_goal_year},own_goal_details=#{own_goal_details},
+	    						own_goal_creatTime=#{own_goal_creatTime},own_goal_finishTime=#{own_goal_finishTime}
+	    						,own_goal_isFinish=#{own_goal_isFinish}
+   
+   </insert>
+   
+   <update id="finishOwnGoal" parameterType="map">
+   		
+   		UPDATE own_goal SET own_goal_isFinish = 1 ,own_goal_finishTime= '${own_goal_finishTime}'  WHERE own_goal_id = ${id} 
+   		
+   </update>
+   
+   
+</mapper>

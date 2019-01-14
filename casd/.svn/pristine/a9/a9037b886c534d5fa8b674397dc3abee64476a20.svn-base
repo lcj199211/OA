@@ -1,0 +1,46 @@
+package com.casd.serviceimpl.construct;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.construct.APartyDao;
+import com.casd.service.construct.APartyService;
+
+@Service
+public class ApartyServiceImpl implements APartyService {
+	
+	
+	@Autowired
+	private APartyDao apartyDao;
+
+	@Override
+	public List<Map<String, Object>> getList(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			int count = apartyDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return apartyDao.getList(param);
+	}
+
+
+
+
+}

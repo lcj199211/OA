@@ -1,0 +1,110 @@
+package com.casd.controller.personManagem;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import Decoder.BASE64Decoder;
+
+import com.casd.entity.hr.Resign;
+import com.casd.service.hr.ResignService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class ResignController {
+
+	@Autowired
+	private ResignService resignService;
+	private String autoPath="";
+	private String resignId;
+	/**
+	 *  添加离职申请
+	 */
+	@RequestMapping(value = "/addResign", method = RequestMethod.POST)
+	@ResponseBody
+	public String  addResign(HttpServletRequest request,Resign ressign) {
+		resignService.addResign(ressign);
+		return "";
+		
+	}
+	
+	/**
+	 *  查看
+	 */
+	@RequestMapping(value = "/resignView", method = RequestMethod.GET)
+	public ModelAndView resignView(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		String hr_resign_id=request.getParameter("hr_resign_id").toString();
+		StringBuffer sbf = new StringBuffer();
+		String fields = "*";
+		sbf.append(" hr_resign where hr_resign_id="+hr_resign_id+"");
+		List<Resign> resign = resignService.getData(fields,
+				sbf.toString());
+		mv.addObject("resign", resign.get(0));
+		mv.setViewName("personManagem/resignView");
+		return mv;
+	}
+	
+	/**
+	 *  签名确认
+	 */
+	@RequestMapping(value = "/save_auto", method = RequestMethod.POST)
+	@ResponseBody
+	public  void  save_auto(HttpServletRequest request,HttpServletResponse response,String lines)
+			throws Exception {
+		
+		File path=null;
+		boolean isSave=false;
+		String fileName="";
+		if(StringUtils.hasText(autoPath)){
+			path = new File("E://uploadfile/photo/"+autoPath+"");
+		}else {
+			fileName=String.valueOf(new Date().getTime())+".png";
+			path = new File("E://uploadfile/photo/"+fileName+"");
+			isSave=true;
+		}
+		
+		BASE64Decoder decoder = new BASE64Decoder();
+		String imageDataurl = lines.substring(22);
+		byte[] b = decoder.decodeBuffer(imageDataurl);//转码得到图片数据
+
+		ByteArrayInputStream bais = new ByteArrayInputStream(b);
+		BufferedImage bi = ImageIO.read(bais);
+		
+		ImageIO.write(bi, "png", path);
+		if(isSave)
+		resignService.addAutoPath(fileName,resignId);
+		response.sendRedirect("resignView.do?hr_resign_id="+resignId);
+	}
+	
+	/**
+	 *  签名
+	 */
+	@RequestMapping(value = "/auto", method = RequestMethod.GET)
+	public ModelAndView auto(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		resignId=request.getParameter("hr_resign_id");
+		autoPath=request.getParameter("hr_resign_autoPath");
+		mv.setViewName("manage/auto");
+		return mv;
+
+	}
+	
+	
+}

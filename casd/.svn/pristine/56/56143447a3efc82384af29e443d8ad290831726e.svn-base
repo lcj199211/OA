@@ -1,0 +1,178 @@
+package com.casd.controller.finance;
+
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.entity.finance.MaterialPrice;
+import com.casd.service.finance.MaterialPriceService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class MaterialPriceController {
+	
+	
+	@Autowired
+	private MaterialPriceService materialPriceService;
+	
+	/**
+	 * 材料单价基础资料
+	*/
+	
+	@RequestMapping(value="/materialPrice" , method = RequestMethod.GET)
+	public ModelAndView materialPrice(HttpServletRequest request) {
+		ModelAndView mv=new ModelAndView();
+		String construct_supplier_id = request.getParameter("construct_supplier_id");
+		mv.addObject("construct_supplier_id", construct_supplier_id);
+		mv.setViewName("finance/materialPrice");
+		return mv;
+	}
+	
+	
+	@RequestMapping(value="/materialPrice" , method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> materialPrice(HttpServletRequest request,HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf=new StringBuffer();
+		String construct_supplier_id = request.getParameter("construct_supplier_id");
+		sbf.append(" construct_material_price price left join construct_supplier_table supplier on price.construct_material_supplierId=supplier.construct_supplier_id  where 1=1 and construct_material_supplierId ="+construct_supplier_id);
+		
+		String searchName=request.getParameter("construct_material_name");
+		String construct_material_model=request.getParameter("construct_material_model");
+		if (StringUtils.hasText(searchName)) {
+			sbf.append(" and construct_material_name like'%"+searchName+"%'");
+		}
+		if (StringUtils.hasText(construct_material_model)) {
+			sbf.append(" and construct_material_model like'%"+construct_material_model+"%'");
+		}
+		
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		List<Map<String, Object>> data=materialPriceService.materialPrice(pageIndex, pageSize, record, sbf.toString());
+		
+		
+		InputStreamReader inputStreamReader = new InputStreamReader(System.in);
+		//
+	    json.put("rows", data);
+	    json.put("total", record.getValue());
+	    return json;
+		
+	}
+	
+	
+	/**
+	 * 添加台账资料
+	 * @author Administrator
+	 * */
+	@RequestMapping(value="/addmaterialprice" , method = RequestMethod.POST)
+	@ResponseBody
+	 public Map<String, Object> addmaterialprice(HttpServletRequest request) {
+		Map<String, Object> json=new HashMap<String, Object>();
+		String message="";
+		try {
+		
+		String quantities_name=request.getParameter("quantities_name");
+		String quantities_model=request.getParameter("quantities_model");
+		String quantities_unit=request.getParameter("quantities_unit");
+		 String material_brand=request.getParameter("material_brand");
+		 String supplier=request.getParameter("supplier");
+		String price=request.getParameter("price");
+		String material_remarks=request.getParameter("material_remarks");
+		 String construct_material_supplierTel=request.getParameter("construct_material_supplierTel");
+		
+		String construct_material_supplierId=request.getParameter("construct_supplier_id");
+		String construct_lowest_price=request.getParameter("construct_lowest_price");
+		String construct_latest_price=request.getParameter("construct_latest_price");
+		String construct_material_modelId=request.getParameter("construct_material_modelId");
+		
+		String quantities_conId=request.getParameter("quantities_conId").isEmpty()?"0":request.getParameter("quantities_conId");
+		MaterialPrice mp=new MaterialPrice();
+		mp.setConstruct_material_priceId(Integer.parseInt(quantities_conId));
+		mp.setConstruct_material_name(quantities_name);
+		mp.setConstruct_material_model(quantities_model);
+		mp.setConstruct_material_unit(quantities_unit);
+		mp.setConstruct_material_brand("");
+		mp.setConstruct_material_supplier("");
+		mp.setConstruct_material_price(Double.parseDouble(price));
+		mp.setConstruct_material_remarks(material_remarks);
+		mp.setConstruct_material_supplierTel("");
+		mp.setConstruct_latest_price(Double.parseDouble(construct_latest_price));
+		mp.setConstruct_lowest_price(Double.parseDouble(construct_lowest_price));
+		mp.setConstruct_material_modelId(Integer.parseInt(construct_material_modelId));
+		mp.setConstruct_material_supplierId(Integer.parseInt(construct_material_supplierId));
+		
+		message=materialPriceService.insert(mp);
+		} catch (Exception e) {
+			e.printStackTrace();
+			json.put("msg","操作失败！");
+		} finally{
+			if (!message.equals("")) {
+				json.put("msg","此材料已存在，不可选择！");
+			}
+		}
+		 
+		return json;
+		
+	}
+	@RequestMapping(value="/deleprice" , method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> deleprice(HttpServletRequest request)  throws Exception{
+		Map<String, Object> json=new HashMap<String, Object>();
+	  String material_priceId=request.getParameter("material_priceId");
+	  StringBuffer sbf=new StringBuffer();
+	  try {
+		  sbf.append("where construct_material_priceId="+material_priceId);
+		  materialPriceService.delete(sbf.toString());	  
+	} catch (Exception e) {
+		json.put("msg", "删除失败！");
+	}
+	 
+		return json;
+		
+	}
+	
+	
+	//重复数据
+	@RequestMapping(value="/exis_repetition" , method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> exis_repetition(HttpServletRequest request)  throws Exception{
+		Map<String, Object> json=new HashMap<String, Object>();
+		String modelId=request.getParameter("modelId");
+		String quantities_id=request.getParameter("quantities_id");
+		String quantities_conId=request.getParameter("quantities_conId");
+		Map<String, Object> map=new HashMap<String, Object>();
+		StringBuffer sbf=new StringBuffer();
+	  
+		try {
+			  String fiedsString="*";
+			  sbf.append(" construct_project_quantities  where construct_project_quantities_conId="+quantities_conId+" "
+			  		+ " and construct_project_quantities_modelId="+modelId+"  and construct_project_quantities_id !="+quantities_id+"");
+			  map.put("fieds", fiedsString);
+			  map.put("where", sbf);
+			  List<Map<String , Object>> data= materialPriceService.exis_repetition(map);
+			  json.put("data", data);
+	  } catch (Exception e) {
+		  json.put("msg", "删除失败！"+e);
+	  }
+	  	
+		return json;
+		
+	}
+}

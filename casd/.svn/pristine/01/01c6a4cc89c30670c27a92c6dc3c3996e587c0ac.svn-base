@@ -1,0 +1,93 @@
+package com.casd.serviceimpl.finance;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.dao.finance.MaterialDao;
+import com.casd.dao.finance.SupplierDao;
+import com.casd.entity.finance.MaterialPrice;
+import com.casd.entity.finance.Supplier;
+import com.casd.service.finance.SupplierService;
+
+@Service
+public class SupplierServiceImpl implements SupplierService {
+
+	@Autowired
+	private SupplierDao supplierDao;
+	@Autowired
+	private MaterialDao materialDao;
+	
+
+	@Override
+	public void saveSupplier(Supplier supplier) {
+		// TODO Auto-generated method stub
+		supplierDao.saveSupplier(supplier);
+	}
+
+	@Override
+	public void deleSupplier(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		supplierDao.deleSupplier(map);
+	}
+	
+	
+	// 循环所有分类插入
+	@Override
+	@Transactional
+	public Map<String, Object> toMaterialPrice() {
+		String seriesID="";
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
+		try {
+			
+		List<Map<String, Object>> dataList = new ArrayList<Map<String, Object>>();
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("fields", "*");
+		map.put("where", "construct_material_series");
+		dataList = materialDao.selectData(map);
+
+		for (int i = 0; i < dataList.size(); i++) {
+			Map<String, Object> data = dataList.get(i);
+			String seriesSuppliers = data.get(
+					"construct_material_seriesSuppliers").toString();
+			String[] supplierIds = seriesSuppliers.split(",");
+			
+			 seriesID = data.get("construct_material_seriesID")
+					.toString();
+			
+			List<Map<String, Object>> materialData = new ArrayList<Map<String, Object>>();
+			map.put("fields", " model.construct_material_model_id,model.construct_material_model_unit,model.construct_material_model_name,material.construct_material_name ");
+			map.put("where", "construct_material_model model "
+					+ " LEFT JOIN construct_material_table material on model.construct_material_model_parentid =material.construct_material_id  "
+					+ " LEFT JOIN construct_material_series series on material.construct_material_seriesId=series.construct_material_seriesID "
+					+ " where series.construct_material_seriesID="+seriesID+" ");
+			materialData = materialDao.selectData(map);
+			
+			
+			for (int j = 0; j < supplierIds.length; j++) {
+				int construct_material_supplierId = Integer.valueOf(supplierIds[j].toString());
+				map.clear();
+				map.put("table", "construct_material_price");
+				for (int k = 0; k < materialData.size(); k++) {
+					Map<String, Object> materialMap = materialData.get(k);
+					
+					map.put("fieds", "("+construct_material_supplierId+","+materialMap.get("construct_material_model_id")+","
+							+ "'"+materialMap.get("construct_material_model_unit")+"','"+materialMap.get("construct_material_model_name")+"','"
+									+ ""+materialMap.get("construct_material_name")+"')");
+					materialDao.insertData(map);
+				}
+			}
+		}
+	} catch (Exception e) {
+		System.out.println("错误是"+e+"类别是"+seriesID);
+		jsonMap.put("msg", "操作失败,错误是"+e+"类别是"+seriesID);
+	}
+		return jsonMap;
+	}
+		
+}

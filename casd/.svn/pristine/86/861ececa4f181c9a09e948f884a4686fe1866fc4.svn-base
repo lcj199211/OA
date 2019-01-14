@@ -1,0 +1,24 @@
+package com.casd.dao.hr;
+
+import java.util.List;
+import java.util.Map;
+
+import com.casd.entity.hr.Resign;
+import com.casd.entity.manage.AchReview;
+import com.casd.entity.manage.Contract;
+import com.casd.entity.manage.Reqfunds;
+import com.casd.entity.tree.Menu;
+import com.casd.entity.uc.User;
+
+public interface ResignDao {
+
+	void addResign(Resign ressign);
+
+	List<Resign> getData(Map<String, Object> param);
+
+
+	void addAutoPath(Map<String, Object> param);
+
+
+
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.construct.PurChangeDao">
+
+
+    <select id="purchaseList" parameterType="map" resultType="map">
+        select * from ${where} ${limit}
+    </select>
+     <!-- 保存 -->
+    <insert id="savePurChange" useGeneratedKeys="true" keyProperty="purChangeTab_id" parameterType="com.casd.entity.construct.PurChange" >
+        INSERT INTO purChangeTab  
+        (
+        purChangeTab_id,purChangeTab_proName,purChangeTab_matter,purChangeTab_dep,
+        purChangeTab_total,purChangeTab_proId,purChangeTab_reason,purChangeTab_status
+        ) 
+        VALUES
+        (
+        #{purChangeTab_id},#{purChangeTab_proName},#{purChangeTab_matter},#{purChangeTab_dep},
+        #{purChangeTab_total},#{purChangeTab_proId},#{purChangeTab_reason},#{purChangeTab_status}
+        )
+        on duplicate key update
+	            purChangeTab_id=#{purChangeTab_id},purChangeTab_proName=#{purChangeTab_proName},purChangeTab_matter=#{purChangeTab_matter},
+	            purChangeTab_dep=#{purChangeTab_dep},purChangeTab_total=#{purChangeTab_total},
+	            purChangeTab_proId=#{purChangeTab_proId},purChangeTab_reason=#{purChangeTab_reason}
+	            ,purChangeTab_status=#{purChangeTab_status}
+    </insert>
+    
+    <insert id="savePurchangeEntries" parameterType="com.casd.entity.construct.PurChangeEmtry" >
+        INSERT INTO purChangeEntryTab  
+        (
+        purChangeEntryTab_id,purChangeEntryTab_material,purChangeEntryTab_model,purChangeEntryTab_quarityNum,
+        purChangeEntryTab_purNum,purChangeEntryTab_applyNum,purChangeEntryTab_remarks,
+        purChangeEntryTab_total,purChangeEntryTab_unit,purChangeEntryTab_price,purChangeEntryTab_parentId
+        ) 
+        VALUES
+        (
+        #{purChangeEntryTab_id},#{purChangeEntryTab_material},#{purChangeEntryTab_model},#{purChangeEntryTab_quarityNum},
+        #{purChangeEntryTab_purNum},#{purChangeEntryTab_applyNum},#{purChangeEntryTab_remarks},
+        #{purChangeEntryTab_total},#{purChangeEntryTab_unit},#{purChangeEntryTab_price},#{purChangeEntryTab_parentId}
+        )
+        on duplicate key update
+	            purChangeEntryTab_id=#{purChangeEntryTab_id},purChangeEntryTab_material=#{purChangeEntryTab_material},
+	            purChangeEntryTab_model=#{purChangeEntryTab_model},purChangeEntryTab_applyNum=#{purChangeEntryTab_applyNum},
+	            purChangeEntryTab_purNum=#{purChangeEntryTab_purNum},purChangeEntryTab_applyNum=#{purChangeEntryTab_applyNum},
+	            purChangeEntryTab_remarks=#{purChangeEntryTab_remarks},purChangeEntryTab_total=#{purChangeEntryTab_total},
+	            purChangeEntryTab_unit=#{purChangeEntryTab_unit},purChangeEntryTab_price=#{purChangeEntryTab_price},
+	            purChangeEntryTab_parentId=#{purChangeEntryTab_parentId}
+    </insert>
+    
+    <select id="getData" parameterType="map" resultType="map">
+        select ${fields} from  ${where} 
+    </select>
+    
+    
+    <delete id="delete_purChange" parameterType="map">
+        DELETE  purChangeTab,purChangeEntryTab from  ${where}
+    </delete>
+    
+    <delete id="delete_purChangeEntry" parameterType="map">
+        DELETE  from  ${where}
+    </delete>
+    
+     <update id="updateBillStatus">
+    	update purChangeTab set purChangeTab_status=${status} where purChangeTab_id=${billID};
+    </update>
+    
+</mapper>

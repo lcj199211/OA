@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.casd.dao.uc.FrameWorkDao">
+
+    <select id="getData" parameterType="map" resultType="map">
+        select ${fields} from ${where}
+    </select>
+    
+    
+    <delete id="deleFrameWork" parameterType="map" >
+    	DELETE from uc_framework where uc_framework_id=${id}
+    </delete>
+    
+    <insert id="save_frameWork" parameterType="com.casd.entity.uc.FrameWork">
+        insert into  uc_framework (uc_framework_id,uc_framework_name,uc_framework_parentId,uc_framework_describe,uc_framework_company) 
+        VALUES  
+	        (#{uc_framework_id},#{uc_framework_name},#{uc_framework_parentId},#{uc_framework_describe},#{uc_framework_company})  
+	        on duplicate key update uc_framework_id=#{uc_framework_id},uc_framework_name=#{uc_framework_name},uc_framework_parentId=#{uc_framework_parentId},
+	        uc_framework_describe=#{uc_framework_describe},uc_framework_company=#{uc_framework_company}
+    </insert>
+    
+    <select id="frameWorkList" parameterType="map" resultType="map">
+		select * from ${where} ${limit}
+	</select>
+	<select id="getFrameWorkCount" parameterType="map" resultType="int">
+		select COUNT(1) from ${where}
+	</select>
+    
+</mapper>
+
+

@@ -1,0 +1,43 @@
+package com.casd.serviceimpl.finance;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.finance.MaterialDao;
+import com.casd.dao.finance.SupplierDao;
+import com.casd.entity.finance.Material;
+import com.casd.entity.finance.MaterialModel;
+import com.casd.entity.finance.Supplier;
+import com.casd.service.finance.MaterialService;
+import com.casd.service.finance.SupplierService;
+
+@Service
+public class SupplierServiceImpl implements SupplierService{
+
+	@Autowired
+	private SupplierDao supplierDao;
+
+
+	@Override
+	public void saveSupplier(Supplier supplier) {
+		// TODO Auto-generated method stub
+		supplierDao.saveSupplier(supplier);
+	}
+
+
+	@Override
+	public void deleSupplier(Map<String, Object> map) {
+		// TODO Auto-generated method stub
+		supplierDao.deleSupplier(map);
+	}
+	
+}

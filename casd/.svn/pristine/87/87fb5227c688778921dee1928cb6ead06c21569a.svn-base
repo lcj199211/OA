@@ -1,0 +1,61 @@
+package com.casd.controller.construct;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.service.construct.ConstructService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class LaborCostController {
+	
+	@Autowired
+	private ConstructService constructService;
+	
+	/**
+	 * 建设公司项目list
+	 */
+	@RequestMapping(value = "/laborCostMon", method = RequestMethod.GET)
+	public ModelAndView aPartyConList(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("construct/laborCostMon");
+		return mv;
+	}
+
+	/*@RequestMapping(value = "/aPartyConList", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> aPartyConList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf = new StringBuffer();
+		sbf.append(" construct_project_table pro left join construct_project_dep dep on dep.constuct_project_dep_id=pro.construct_project_dep where dep.constuct_project_dep_company=1  ");
+		String construct_project_name = request.getParameter("construct_project_name");
+		if (StringUtils.hasText(construct_project_name)) {
+			sbf.append(" and pro.construct_project_name like '%" + construct_project_name
+					+ "%'");
+		}
+		
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		
+		List<Map<String, Object>> data = constructService.constructList(
+				pageIndex, pageSize, record, sbf.toString());
+
+		json.put("rows", data);
+		json.put("total", record.getValue());
+		return json;
+
+	}
+	    */
+	
+	
+	
+}

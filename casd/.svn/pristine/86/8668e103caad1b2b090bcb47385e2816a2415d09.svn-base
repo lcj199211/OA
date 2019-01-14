@@ -1,0 +1,207 @@
+package com.casd.controller.tree;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONObject;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.casd.controller.web.Ref;
+import com.casd.controller.web.common.Authorize;
+import com.casd.controller.web.common.Authorize.ResultType;
+import com.casd.controller.web.common.Authorize.RoleEnum;
+import com.casd.entity.tree.Menu;
+import com.casd.entity.uc.User;
+import com.casd.service.tree.MenuService;
+import com.casd.service.uc.UserService;
+
+
+@Controller
+@RequestMapping("/admin")
+public class MenuController {
+
+	
+	/**
+	 * 菜单加载
+	*/
+	@Autowired
+	private MenuService menuService;
+	@RequestMapping(value="/index" , method = RequestMethod.GET)
+	public String queryMenuList(HttpServletRequest request,Model model) {
+	    // 原始的数据
+		Map<String, Object> map=new HashMap<String, Object>();
+		StringBuilder sbf=new StringBuilder();
+		StringBuilder sb=new StringBuilder();
+        User loginUser =(User) request.getSession().getAttribute("loginUser");
+        String username = loginUser.getUsername();
+        sbf.append("uc_role_menu rm "); 
+        sbf.append("LEFT JOIN uc_role role on rm.role_id=role.role_id ");
+		sbf.append("LEFT JOIN uc_user uc on role.role_id=uc.role_id ");
+		sbf.append("where uc.username='"+username+"' ");
+	    map.put("where", sbf.toString());
+	    map.put("what", "rm.menu_id");
+	    String menu_id=menuService.findMenu(map);
+	    
+	    sb.append("uc_menu menu where id in ("+menu_id+") and ismenu=1 order by menu.`order`");
+	    map.put("where", sb.toString());
+	    map.put("what", "*");
+		List<Menu> rootMenu = menuService.queryMenuList(map);
+	    // 最后的结果
+	    List<Menu> menuList = new ArrayList<Menu>();
+	    // 先找到所有的一级菜单
+	    for (int i = 0; i < rootMenu.size(); i++) {
+	        // 一级菜单没有parentId(数据库存为-1)
+	        if ((rootMenu.get(i).getParent_id())==-1) {	
+	            menuList.add(rootMenu.get(i));
+	        }
+	    }
+	    // 为一级菜单设置子菜单，getChild是递归调用的
+	    for (Menu menu : menuList) {
+	        menu.setChildMenus(getChild(menu.getId(), rootMenu));
+	    }
+	   
+	    model.addAttribute("menuList", menuList);
+	    model.addAttribute("title", "用户");
+		return "index";
+	   
+	    
+	}
+
+	/**
+	 * 递归查找子菜单
+	 * 
+	 * @param id
+	 *            当前菜单id
+	 * @param rootMenu
+	 *            要查找的列表
+	 * @return
+	 */
+	private List<Menu> getChild(int id, List<Menu> rootMenu) {
+	    // 子菜单
+	    List<Menu> childList = new ArrayList<Menu>();
+	    for (Menu menu : rootMenu) {
+	        // 遍历所有节点，将父菜单id与传过来的id比较
+	        if (!StringUtils.isEmpty(menu.getParent_id())) {
+	            if (menu.getParent_id()==id) {
+	                childList.add(menu);
+	            }
+	        }
+	    }
+	    // 把子菜单的子菜单再循环一遍
+	    /*for (Menu menu : childList) {// 没有url子菜单还有子菜单
+	        if (StringUtils.isEmpty(menu.getMenu_url())) {
+	            // 递归
+	            menu.setChildMenus(getChild(menu.getId(), rootMenu));
+	        }
+	    } // 递归退出条件
+	    if (childList.size() == 0) {
+	        return null;
+	    }*/
+	    return childList;
+	}
+	
+	/**
+	 * 菜单列表
+	*/
+	@Authorize(code = "ARTICLE_DELE", type =ResultType.REDIRECT, role = RoleEnum.ADMIN)
+	@RequestMapping(value="/menuList" , method = RequestMethod.GET)
+	public ModelAndView menuList(HttpServletRequest request) {
+		ModelAndView mv=new ModelAndView();
+		mv.setViewName("uc/menuList");
+		return mv;
+		
+	}
+	
+	/**
+	 * 菜单信息表查询
+	 * 分页
+	 * 模糊查询
+	 * */
+	@RequestMapping(value="/menuList" , method = RequestMethod.POST)
+	//@Authorize(code = "ARTICLE_DELE", type =ResultType.REDIRECT, role = RoleEnum.ADMIN)
+	@ResponseBody
+	public Map<String, Object> menuList(HttpServletRequest request,HttpServletResponse response) throws Exception {
+		Ref<Integer> record = new Ref<Integer>();
+		Map<String, Object> json = new HashMap<String, Object>();
+		StringBuffer sbf=new StringBuffer();
+		sbf.append(" uc_menu where 1=1");
+
+		String searchId=request.getParameter("searchId");
+		String searchName=request.getParameter("searchName");
+		if (StringUtils.hasText(searchId)) {
+			sbf.append(" and id='"+searchId+"'");
+		}
+		if (StringUtils.hasText(searchName)) {
+			sbf.append(" and menu_name like'%"+searchName+"%'");
+		}
+		int pageSize = Integer.parseInt(request.getParameter("rows"));
+		int pageIndex = Integer.parseInt(request.getParameter("page")) - 1;
+		
+		
+		List<Map<String, Object>> data=menuService.menuList(pageIndex, pageSize, record, sbf.toString(),searchId,searchName);
+	    json.put("rows", data);
+	    json.put("total", record.getValue());
+	    return json;
+		
+	}
+	
+	/**
+	 * 菜单新增修改
+	*/
+	
+	@RequestMapping(value="/addMenu" , method = RequestMethod.POST)
+	@ResponseBody
+	public String addMenu(HttpServletRequest request, Model model) {
+		Menu menu=new Menu();
+		String menuname = request.getParameter("menuname");
+		int parent =Integer.parseInt((String) (request.getParameter("parent").isEmpty()?-1:request.getParameter("parent")));
+		String url = request.getParameter("url");
+		int ord = Integer.parseInt((String) (request.getParameter("ord").isEmpty()?1:request.getParameter("ord")));
+		int ismenu=Integer.parseInt((String) (request.getParameter("ismenu").isEmpty()?1:request.getParameter("ismenu")));
+		menu.setMenu_name(menuname);
+		menu.setParent_id(parent);
+		menu.setMenu_url(url);
+		menu.setOrder(ord);
+		menu.setIsmenu(ismenu);
+		if(request.getParameter("menuid")==""){
+			menu.setId(0);
+			menuService.addMenu(menu);
+		}else{
+			menu.setId(Integer.parseInt(request.getParameter("menuid")));
+		    menuService.updateMenu(menu);
+		}
+		
+		return "";
+	}
+	
+	/**
+	 * 菜单删除
+	*/
+	@RequestMapping(value="/deleMenu" , method = RequestMethod.POST)
+	@ResponseBody
+	public String deleMenu(HttpServletRequest request, Model model) {
+		Map<String, Object> map=new HashMap<String, Object>();
+		String menuids =request.getParameter("menuids");
+		menuids=menuids.substring(1);
+		String[] ids=menuids.split("]");
+		map.put("what",ids[0]);        
+	    map.put("where", "uc_menu");
+		menuService.deleMenu(map);
+		return null;
+	}
+	
+	
+}

@@ -1,0 +1,65 @@
+package com.casd.serviceimpl.construct;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.casd.controller.web.Ref;
+import com.casd.dao.construct.APartyDao;
+import com.casd.service.construct.APartyService;
+
+@Service
+public class ApartyServiceImpl implements APartyService {
+	
+	
+	@Autowired
+	private APartyDao apartyDao;
+
+	@Override
+	public List<Map<String, Object>> getList(int page, int pageSize,
+			Ref<Integer> record, String where) throws Exception {
+		
+		Map<String, Object> param = new HashMap<String, Object>();
+
+		param.put("where", where);
+
+		if (record != null) {
+			int count = apartyDao.getCount(param);
+			record.setValue(count);
+		}
+		// 分页
+		if (pageSize <= 0)
+			throw new Exception("pageSize 必须 > 0");
+
+		param.put("limit", String.format("limit %1$s,%2$s", page < 0 ? 0 : page
+				* pageSize, pageSize));
+
+		return apartyDao.getList(param);
+	}
+
+	@Override
+	public Map<String, List<Map<String, Object>>> constructNew(
+			int construct_project_id) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("fields", "*");
+		param.put("where", " construct_aparty_purchase where construct_Aparty_purchase_id="+construct_project_id+" ");
+		List<Map<String, Object>> headData =apartyDao.getData(param);
+		param.clear();
+		param.put("fields", "*");
+		param.put("where", " construct_aparty_purentry  where construct_Aparty_purchase_id="+construct_project_id+" ");
+		List<Map<String, Object>> entryData =apartyDao.getData(param);
+		Map<String, List<Map<String, Object>>> data=new HashMap<String, List<Map<String,Object>>>();
+		data.put("aParty", headData);
+		data.put("entries", entryData);
+		return data;
+	}
+
+
+
+
+}
